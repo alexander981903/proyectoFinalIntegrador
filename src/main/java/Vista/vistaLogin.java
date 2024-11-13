@@ -8,14 +8,19 @@ package Vista;
  *
  * @author EMMANUEL
  */
-import Controlador.cCliente;
-import Controlador.cEmpleado;
+import Controlador.cRegEmpleado;
+import Controlador.cHome;
+import Controlador.cLogin;
+import Controlador.cUsuario;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class vistaLogin extends JFrame {
+    
+    private cRegEmpleado controladorE ;
+    private cLogin controladorL;
     
     // Color de fondo
     private final Color backgroundColor = new Color(0x15, 0x22, 0x31);
@@ -35,7 +40,7 @@ public class vistaLogin extends JFrame {
     
     private JButton loginButton;
     
-    
+    private JLabel createAccountLabel; 
     
     public vistaLogin() {
         // Configuración de la ventana
@@ -46,7 +51,6 @@ public class vistaLogin extends JFrame {
         
         initComponents();
     }
-    
     
     private void initComponents(){
         
@@ -94,6 +98,27 @@ public class vistaLogin extends JFrame {
         gbc.gridwidth = 2; // Ocupa dos columnas
         panel.add(loginButton, gbc);
 
+        // Etiqueta "Crear una cuenta nueva"
+        createAccountLabel = new JLabel("¿Crear una cuenta nueva?");
+        createAccountLabel.setForeground(textColor);
+        gbc.gridx = 0; // Columna
+        gbc.gridy = 3; // Fila
+        gbc.gridwidth = 2; // Ocupa dos columnas
+        createAccountLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        createAccountLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)); // Cambiar el cursor a mano
+        panel.add(createAccountLabel, gbc);
+
+        // Evento al hacer clic en "Crear una cuenta nueva"
+        createAccountLabel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {                
+                vistaRegUsuario regUsuario = new vistaRegUsuario();
+                new cUsuario (regUsuario);
+                regUsuario.setVisible(true);
+                
+                dispose(); // Cerrar la ventana de login al abrir el registro
+            }
+        });
+
         // Evento al hacer clic en el botón de inicio de sesión
         loginButton.addActionListener(new ActionListener() {
             @Override
@@ -101,22 +126,7 @@ public class vistaLogin extends JFrame {
                 String username = userField.getText();
                 String password = new String(passwordField.getPassword());
                 // lógica de inicio de sesión
-                /* Create and display the form */
-                java.awt.EventQueue.invokeLater(new Runnable() {
-                    public void run() {
-                        vistaHome vista = new vistaHome();
-                        vista.setVisible(true);
-                        new cEmpleado(vista);
-                        new cCliente(vista);
-                    }
-                });
-                // Por ejemplo, validar las credenciales
-                System.out.println("Intentando iniciar sesión con:");
-                System.out.println("Usuario: " + username);
-                System.out.println("Contraseña: " + password);
-                // Puedes mostrar un mensaje o realizar otras acciones
-                JOptionPane.showMessageDialog(vistaLogin.this, "Iniciando sesión...");
-                dispose();
+                controladorL.validarCredenciales(username, password);            
             }
         });
 
@@ -124,6 +134,16 @@ public class vistaLogin extends JFrame {
         add(panel);
         
     }
+
+    public void setControladorL(cLogin controladorL) {
+        this.controladorL = controladorL;
+    }
+    
+    /**
+   * Método para mostrar mensajes al usuario.
+   * @param mensaje Mensaje a mostrar.
+   */
+    public void mostrarMensaje(String mensaje) {
+      JOptionPane.showMessageDialog(this, mensaje);
+    }
 }
-
-

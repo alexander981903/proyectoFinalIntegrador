@@ -8,8 +8,9 @@ package Vista;
  *
  * @author EMMANUEL
  */
-import Controlador.cCliente;
-import Controlador.cEmpleado;
+import Controlador.cRegCliente;
+import Controlador.cRegEmpleado;
+import Controlador.cHome;
 import Modelo.Cliente;
 import Modelo.Empleado;
 import javax.swing.*;
@@ -17,13 +18,15 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 
 public class vistaHome extends JFrame {
 
     
-    private cEmpleado controlador;
-    private cCliente controladorC;
+    private cRegEmpleado controladorE;
+    private cRegCliente controladorRC;
     
     private JTabbedPane tabbedPane;
     
@@ -61,6 +64,8 @@ public class vistaHome extends JFrame {
     
     private JTextField searchField1;
     private JTextField searchField;
+    
+    private cHome controladorH;
     
     
     
@@ -186,9 +191,10 @@ public class vistaHome extends JFrame {
         newClientButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                vistaRegCliente vistaC = new vistaRegCliente(); // Abre el formulario de registro de clientes
-                vistaC.setVisible(true);
-                new cCliente(vistaC);
+                vistaRegCliente vistaRC = new vistaRegCliente(); // Abre el formulario de registro de clientes
+                vistaRC.setControladorH(controladorH);
+                vistaRC.setVisible(true);
+                new cRegCliente(vistaRC);
             }
         });
 
@@ -243,7 +249,8 @@ public class vistaHome extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 vistaRegEmpleado vistaReg = new vistaRegEmpleado(); // Abre el formulario de registro de empleado
                 vistaReg.setVisible(true);
-                new cEmpleado(vistaReg);
+                vistaReg.setControladorH(controladorH);
+                new cRegEmpleado(vistaReg);
             }
         });
 
@@ -302,18 +309,86 @@ public class vistaHome extends JFrame {
         add(topPanel, BorderLayout.NORTH); // Agregar el panel superior
         add(scrollPane, BorderLayout.WEST);
         add(tabbedPane, BorderLayout.CENTER);
+        
+        // Añadir MouseListener a la tabla de clientes
+        clientsTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                // Obtener la fila seleccionada
+                int row = clientsTable.rowAtPoint(evt.getPoint());
+
+                // Verificar que la fila seleccionada sea válida
+                if (row >= 0) {
+                    // Obtener el idCliente de la primera columna (suponiendo que es la columna 0)
+                    int idCliente = (int) clientsTable.getValueAt(row, 0);
+                    vistaRegCliente vista = new vistaRegCliente();
+                    controladorRC = new cRegCliente (vista);
+                    vista.setControladorH(controladorH);
+                    vista.getBtnNuevo().setVisible(false);
+                    vista.getBtnModificar().setVisible(true);
+                    
+
+                    // Llamar al controlador para buscar al cliente usando el idCliente
+                    controladorRC.buscarCliente(idCliente);
+                    vista.setVisible(true);
+                }
+            }
+        });
+        
+        // Añadir MouseListener a la tabla de Empleados
+        empleadosTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                // Obtener la fila seleccionada
+                int row = empleadosTable.rowAtPoint(evt.getPoint());
+
+                // Verificar que la fila seleccionada sea válida
+                if (row >= 0) {
+                    // Obtener el idCliente de la primera columna (suponiendo que es la columna 0)
+                    int idEmpleado = (int) empleadosTable.getValueAt(row, 0);
+                    vistaRegEmpleado vista = new vistaRegEmpleado();
+                    controladorE = new cRegEmpleado (vista);
+                    vista.setControladorH(controladorH);
+                    vista.getBtnNuevo().setVisible(false);
+                    vista.getBtnModificar().setVisible(true);
+                    
+
+                    // Llamar al controlador para buscar al empleado usando el idEmpleado
+                    controladorE.buscarEmpleadoxId(idEmpleado);
+                    vista.setVisible(true);
+                }
+            }
+        });
+        
+        // Agregar un DocumentListener para el campo de búsqueda
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                controladorH.buscarClientesPorNombre(searchField.getText());
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                controladorH.buscarClientesPorNombre(searchField.getText());
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                
+            }
+        });
+
+
     }
     
     /**
    * Método para establecer el controlador.
-   * @param controlador Objeto ProductoControlador.
+   * @param controladorE Objeto ProductoControlador.
    */
-    public void setControlador(cEmpleado controlador) {
-      this.controlador = controlador;
+    public void setControladorE(cRegEmpleado controladorE) {
+      this.controladorE = controladorE;
     }
     
-    public void setControladorC(cCliente controladorC) {
-      this.controladorC = controladorC;
+    public void setControladorC(cRegCliente controladorC) {
+      this.controladorRC = controladorC;
     }
     
     /**
@@ -341,6 +416,14 @@ public class vistaHome extends JFrame {
     }
     
     /**
+     * Método para realizar la búsqueda y filtrar datos
+     * @param clientes lista clientes filtrada
+     */
+    public void realizarBusquesa(ArrayList<Cliente> clientes) {
+        mostrarClientes(clientes); // Mostrar los clientes filtrados en la tabla
+    }
+    
+    /**
      * Método para mostrar una lista de clientes en la tabla.
      * @param clientes Lista de clientes.
      */
@@ -355,6 +438,10 @@ public class vistaHome extends JFrame {
                 cli.getTelefono()
             });
         }
+    }
+
+    public void setControladorH(cHome controladorH) {
+        this.controladorH = controladorH;
     }
 
 }

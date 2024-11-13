@@ -11,24 +11,18 @@ package Modelo;
 public class Usuario {
     private String login;
     private String clave;
-    private Empleado emp;
-    private Cliente cliente;
+    private String rol;
+    private Object obj;
 
     public Usuario() {
     }
 
-    public Usuario(String login, String clave, Empleado emp) {
-        this.login = login;
-        this.clave = clave;   
-        this.emp = emp;
-    }
-
-    public Usuario(String login, String clave, Cliente cliente) {
+    public Usuario(String login, String clave, String rol, Object obj) {
         this.login = login;
         this.clave = clave;
-        this.cliente = cliente;
+        this.rol = rol;
+        this.obj = obj;
     }
-
 
     public String getLogin() {
         return login;
@@ -47,22 +41,18 @@ public class Usuario {
     }
 
     public String getRol() {
-        return emp.getCargo();
+        return rol;
     }
 
-    public Empleado getEmp() {
-        return emp;
+    public void setRol(String rol) {
+        this.rol = rol;
     }
 
-    public void setEmp(Empleado emp) {
-        this.emp = emp;
+    public Object getObj() {
+        return obj;
     }
 
-    public Cliente getCliente() {
-        return cliente;
+    public void setObj(Object obj) {
+        this.obj = obj;
     }
-
-    public void setCliente(Cliente cliente) {
-        this.cliente = cliente;
-    }   
 }

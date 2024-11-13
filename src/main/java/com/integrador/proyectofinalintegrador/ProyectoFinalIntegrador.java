@@ -4,6 +4,7 @@
 
 package com.integrador.proyectofinalintegrador;
 
+import Controlador.cLogin;
 import Vista.vistaLogin;
 import javax.swing.SwingUtilities;
 
@@ -18,6 +19,7 @@ public class ProyectoFinalIntegrador {
         SwingUtilities.invokeLater(() -> {
             vistaLogin loginFrame = new vistaLogin();
             loginFrame.setVisible(true);
+            new cLogin(loginFrame);
         });
     }
 }

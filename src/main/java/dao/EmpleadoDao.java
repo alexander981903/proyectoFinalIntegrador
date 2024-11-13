@@ -71,5 +71,46 @@ public class EmpleadoDao {
         return empleados;
     }
     
+    /**
+     * Obtiene un empleado específico de la base de datos.
+     * 
+     * @param idEmpleado El ID del empleado que se desea obtener.
+     * @return El objeto empleado correspondiente al ID, o null si no se encuentra.
+     */
+     public Empleado buscarPorId(int idEmpleado) {
+        String sql = "SELECT * FROM empleado WHERE idEmpleado=?";
+        try (Connection conn = DataSource.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idEmpleado);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                // Retorna un nuevo objeto Empleado con los datos obtenidos
+                return new Empleado (
+                    rs.getInt("idEmpleado"),
+                    rs.getString("nombreEmpleado"),
+                    rs.getString("cargo"),
+                    rs.getString("Turno")
+                );
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener Empleado: " + e.getMessage());
+        }
+        return null; // Retorna null si no se encuentra el empleado
+    }
+     
+    public boolean actualizarEmpleado(Empleado emp){
+        String sql = "UPDATE empleado SET nombreEmpleado = ?, cargo = ?, turno = ? WHERE idEmpleado = ?";
+        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+            ps.setString(1, emp.getNombreEmp());
+            ps.setString(2, emp.getCargo());
+            ps.setString(3,emp.getTurno());
+            ps.setInt(4, emp.getIdEmpleado());
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar Empleado: " + e.getMessage());
+            return false;
+        }
+    }
     
 }

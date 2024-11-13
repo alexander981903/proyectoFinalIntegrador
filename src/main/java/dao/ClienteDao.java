@@ -74,5 +74,75 @@ public class ClienteDao {
         }
         return clientes;
     }
+    
+    /**
+     * Obtiene un cliente específico de la base de datos.
+     * 
+     * @param idCliente El ID del cliente que se desea obtener.
+     * @return El objeto Cliente correspondiente al ID, o null si no se encuentra.
+     */
+     public Cliente buscarPorId(int idCliente) {
+        String sql = "SELECT * FROM cliente WHERE idCliente=?";
+        try (Connection conn = DataSource.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idCliente);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                // Retorna un nuevo objeto Cliente con los datos obtenidos
+                return new Cliente(
+                    rs.getInt("idCliente"),
+                    rs.getString("nombre"),
+                    rs.getString("apellido"),
+                    rs.getString("email"),
+                    rs.getString("telefono")
+                );
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener cliente: " + e.getMessage());
+        }
+        return null; // Retorna null si no se encuentra el cliente
+    }
+     
+    public boolean actualizarCliente(Cliente cliente){
+        String sql = "UPDATE cliente SET nombre = ?, apellido = ?, email = ?, telefono = ? WHERE idCliente = ?";
+        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+            ps.setString(1, cliente.getNombre());
+            ps.setString(2, cliente.getApellido());
+            ps.setString(3,cliente.getEmail());
+            ps.setString(4, cliente.getTelefono());
+            ps.setInt(5, cliente.getIdCliente());
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar Cliente: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    public ArrayList<Cliente> buscarClientesPorNombre(String nombre) {
+    ArrayList<Cliente> clientes = new ArrayList<>();
+    String sql = "SELECT * FROM cliente WHERE nombre LIKE ?";
+    
+    // Utilizamos el signo de porcentaje '%' para hacer coincidir cualquier parte del nombre
+    try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+        ps.setString(1, "%" + nombre + "%");  // El '%' indica que puede haber cualquier cosa antes o después del nombre
+        
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Cliente cliente = new Cliente();
+                cliente.setIdCliente(rs.getInt("idCliente"));
+                cliente.setNombre(rs.getString("nombre"));
+                cliente.setApellido(rs.getString("apellido"));
+                cliente.setEmail(rs.getString("email"));
+                cliente.setTelefono(rs.getString("telefono"));
+                clientes.add(cliente);
+            }
+        }
+    } catch (SQLException e) {
+        System.err.println("Error al buscar clientes por nombre: " + e.getMessage());
+    }
+        return clientes;
+    }
+
 }
 

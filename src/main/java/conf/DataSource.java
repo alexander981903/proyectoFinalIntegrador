@@ -13,7 +13,7 @@ import java.sql.SQLException;
  * @author EMMANUEL
  */
 public class DataSource {
-    private static final String URL = "jdbc:mysql://localhost:3306/restaurante";
+    private static final String URL = "jdbc:mysql://localhost:3306/restaurante3";
     private static final String USUARIO = "root";
     private static final String CONTRASENA = "";
 
