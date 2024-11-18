@@ -5,18 +5,15 @@
 package Vista;
 
 /**
- *
+ * La clase vistaRegUsuario representa una ventana de interfaz gráfica para registrar usuarios en el sistema.
+ * 
+ * Esta ventana permite gestionar la creación de un nuevo usuario con un rol asignado y vincularlo con un empleado
+ * o cliente existente.
+ * 
  * @author EMMANUEL
  */
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 
-import Controlador.cHome;
-import Controlador.cRegCliente;
-import Controlador.cRegEmpleado;
-import Controlador.cUsuario;
+import Controlador.*;
 import Modelo.Cliente;
 import Modelo.Empleado;
 
@@ -43,13 +40,33 @@ public class vistaRegUsuario extends JFrame {
     
     private cHome controladorH;
     private cUsuario controladorU;
-
+    private vistaHome vistaH;
+    
+    /**
+     * Constructor de la clase vistaRegUsuario.
+     * Inicializa los componentes de la ventana y configura la visibilidad de los botones para crear nuevos empleados y clientes.
+     */
     public vistaRegUsuario() {
         initComponents();
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        this.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                // Crear e iniciar vistaLogin cuando vistaRegUsuario se cierra
+                vistaLogin login = new vistaLogin();
+                login.setVisible(true);
+                new cLogin(login);
+            }
+        });
+        
         nuevoEmpleadoButton.setVisible(false);
         nuevoClienteButton.setVisible(false);
     }
     
+    /**
+     * Método para inicializar los componentes de la ventana.
+     * Configura el layout, los componentes de la interfaz y la visibilidad de los botones.
+     */
     public void initComponents(){
     // Configuración de la ventana
     setTitle("Registro de Usuario");
@@ -133,6 +150,7 @@ public class vistaRegUsuario extends JFrame {
             vistaRegEmpleado ventanaEmpleado = new vistaRegEmpleado();
             ventanaEmpleado.setVisible(true);
             new cRegEmpleado(ventanaEmpleado);
+            ventanaEmpleado.setControladorH(controladorH);
         }
     });
 
@@ -145,6 +163,7 @@ public class vistaRegUsuario extends JFrame {
             vistaRegCliente ventanaCliente = new vistaRegCliente();
             ventanaCliente.setVisible(true);
             new cRegCliente(ventanaCliente);
+            ventanaCliente.setControladorH(controladorH);
         }
     });
 
@@ -211,10 +230,16 @@ public class vistaRegUsuario extends JFrame {
 }
 
 
-    // Método para actualizar el ComboBox de IDs según el rol seleccionado
+    /**
+     * Método para actualizar el JComboBox de IDs según el rol seleccionado (Empleado o Cliente).
+     * Este método limpia el JComboBox y carga los elementos adecuados (empleados o clientes) 
+     * basándose en el rol seleccionado.
+     * 
+     * @param selectedRole El rol seleccionado (Empleado o Cliente).
+     */
     private void actualizarIdComboBox(String selectedRole) {
         idComboBox.removeAllItems(); // Limpiar el JComboBox        
-        
+
         if ("Empleado".equals(selectedRole)) {
             nuevoEmpleadoButton.setVisible(true);
             nuevoClienteButton.setVisible(false);
@@ -228,32 +253,73 @@ public class vistaRegUsuario extends JFrame {
         }
     }
 
-    // Método para mostrar una lista de empleados en el JComboBox
+    /**
+     * Método para mostrar una lista de empleados en el JComboBox.
+     * Este método limpia el JComboBox y agrega los empleados recibidos como parámetros.
+     * 
+     * @param empleados Lista de empleados a mostrar en el JComboBox.
+     */
     public void mostrarEmpleadosEnComboBox(ArrayList<Empleado> empleados) {
         idComboBox.removeAllItems(); // Limpiar el JComboBox
         for (Empleado emp : empleados) {
             idComboBox.addItem(emp);
         }
     }
-    
-    // Método para mostrar una lista de clientes en el JComboBox
+
+    /**
+     * Método para mostrar una lista de clientes en el JComboBox.
+     * Este método limpia el JComboBox y agrega los clientes recibidos como parámetros.
+     * 
+     * @param clientes Lista de clientes a mostrar en el JComboBox.
+     */
     public void mostrarClientesEnComboBox(ArrayList<Cliente> clientes) {
         idComboBox.removeAllItems(); // Limpiar el JComboBox
         for (Cliente c : clientes) {
             idComboBox.addItem(c);
         }
     }
-    
+
     /**
-   * Método para mostrar mensajes al usuario.
-   * @param mensaje Mensaje a mostrar.
-   */
+     * Método para mostrar mensajes al usuario.
+     * 
+     * @param mensaje El mensaje a mostrar en el cuadro de diálogo.
+     */
     public void mostrarMensaje(String mensaje) {
-      JOptionPane.showMessageDialog(this, mensaje);
+        JOptionPane.showMessageDialog(this, mensaje);
     }
-    
+
+    /**
+     * Método para establecer el controlador de usuarios.
+     * 
+     * @param controladorU Objeto de tipo cUsuario, el controlador de usuarios.
+     */
     public void setControlerU(cUsuario controladorU){
         this.controladorU = controladorU;
     }
+    
+    public void setControlerH(cHome controladorH){
+        this.controladorH = controladorH;
+    }
+    
+    // Método para establecer vistaHome
+    public void setVistaHome(vistaHome vistaH) {
+        this.vistaH = vistaH;
+    }
+
+    // Método para mostrar clientes en vistaHome desde vistaLogin
+    public void mostrarClientesEnVistaHome(ArrayList<Cliente> clientes) {
+        if (vistaH != null) {
+            vistaH.mostrarClientes(clientes);  // Llamar a mostrarClientes en vistaHome
+        }
+    }
+    
+    // Método para mostrar clientes en vistaHome desde vistaLogin
+    public void mostrarEmpleadosEnVistaHome(ArrayList<Empleado> empleados) {
+        
+        if (vistaH != null) {
+            vistaH.mostrarEmpleados(empleados);  // Llamar a mostrarClientes en vistaHome
+        }
+    }
+
 }
 

@@ -8,10 +8,11 @@ import Modelo.Usuario;
 import Vista.vistaHome;
 import Vista.vistaLogin;
 import dao.UsuarioDao;
-import javax.swing.JOptionPane;
 
 /**
- *
+ * Controlador para gestionar el proceso de inicio de sesión de un usuario.
+ * Esta clase valida las credenciales del usuario y, en caso de éxito, redirige a la vista principal.
+ * 
  * @author EMMANUEL
  */
 public class cLogin {
@@ -19,27 +20,39 @@ public class cLogin {
     private vistaLogin vistaL;
     private UsuarioDao daoU;
     
+    /**
+     * Constructor del controlador de login.
+     * Inicializa la vista de login y el acceso al DAO de usuario.
+     * 
+     * @param vistaL La vista de login a controlar.
+     */
     public cLogin(vistaLogin vistaL){
         this.vistaL = vistaL;
         this.daoU = new UsuarioDao();
         this.vistaL.setControladorL(this);
     }
     
-    public void validarCredenciales(String login ,String clave){
+    /**
+     * Valida las credenciales ingresadas por el usuario.
+     * Si las credenciales son correctas, muestra la vista principal (vistaHome),
+     * y en caso contrario, muestra un mensaje de error.
+     * 
+     * @param login El nombre de usuario ingresado.
+     * @param clave La contraseña ingresada.
+     */
+    public void validarCredenciales(String login, String clave) {
+        // Validación de las credenciales del usuario mediante el DAO
         Usuario user = daoU.validarCredenciales(login, clave);
+
         if (user != null) {
-            // Si el usuario es válido, mostramos la vista home
-            vistaL.setVisible(false); // Ocultamos la vista de login
-            // Puedes mostrar un mensaje o realizar otras acciones
-            JOptionPane.showMessageDialog(this.vistaL, "Iniciando sesión...");
-            vistaHome vistaHome = new vistaHome(); // Creamos la vista principal
-            vistaHome.setVisible(true);  // Mostramos la vista principal
-            new cHome(vistaHome);
-            // Mostrar información del usuario o manejar su rol
-            //vistaHome.setUsuario(user);
+                    vistaL.setVisible(false); // Ocultar la vista de login
+                    vistaHome vistaHome = new vistaHome(user); // Crear la vista principal
+                    vistaHome.setVisible(true);  // Mostrar la vista principal
+                    new cHome(vistaHome); // Inicializar el controlador de la vista principal
         } else {
-            // Si las credenciales no son válidas, mostramos un mensaje de error
+            // Si las credenciales son incorrectas, mostramos un mensaje de error
             vistaL.mostrarMensaje("Credenciales incorrectas");
         }
     }
 }
+

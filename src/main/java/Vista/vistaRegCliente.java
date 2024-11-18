@@ -5,7 +5,11 @@
 package Vista;
 
 /**
- *
+ * Clase vistaRegCliente.
+ * Representa la ventana para el registro y modificación de clientes en la aplicación.
+ * Esta ventana permite al usuario ingresar los datos del cliente y registrar un nuevo cliente 
+ * o modificar los datos de un cliente existente.
+ * 
  * @author EMMANUEL
  */
 import Controlador.cHome;
@@ -33,11 +37,20 @@ public class vistaRegCliente extends JFrame {
     private final Color backgroundColor = new Color(0x15, 0x22, 0x31); // Fondo color #152231
     private final Color buttonColor = new Color(0x2A, 0x44, 0x63); // Botón color #2a4463
     private final Color textColor = Color.WHITE; // Color del texto
-
+    
+    
+    /**
+     * Constructor de la clase vistaRegCliente.
+     * Inicializa la interfaz gráfica de la ventana para registro y modificación de clientes.
+     */
     public vistaRegCliente() {
         initComponents();
     }
     
+    /**
+     * Inicializa los componentes visuales de la ventana.
+     * Configura los campos de texto, botones y el layout de la ventana.
+     */
     public void initComponents(){
         // Configuración de la ventana
         setTitle("Registro de Cliente");
@@ -159,34 +172,53 @@ public class vistaRegCliente extends JFrame {
         setVisible(true);
     }
 
-    // Método para establecer el tamaño de los campos
+    /**
+     * Establece el tamaño de los campos de texto.
+     * Este método configura el tamaño preferido, máximo y mínimo de los campos de texto
+     * para asegurarse de que se ajusten adecuadamente al diseño de la interfaz de usuario.
+     * 
+     * @param textField El campo de texto al que se le establecerá el tamaño.
+     */
     private void setFieldSize(JTextField textField) {
         textField.setPreferredSize(new Dimension(200, 20)); // Ancho 200, alto 20
         textField.setMaximumSize(new Dimension(200, 20)); // Establecer tamaño máximo
         textField.setMinimumSize(new Dimension(200, 20)); // Establecer tamaño mínimo
     }
-    
+
     /**
-    * Método para establecer el controlador.
-    * @param controladorC Objeto cCliente.
-    */
+     * Establece el controlador para gestionar las acciones relacionadas con el registro de clientes.
+     * 
+     * @param controladorC El controlador que gestiona las acciones relacionadas con el registro de clientes.
+     */
     public void setControladorC(cRegCliente controladorC) {
         this.controladorRC = controladorC;
     }
-    
-    public void setControladorH(cHome controladorH) {
-    this.controladorH = controladorH;
-    }
-
 
     /**
-   * Método para mostrar mensajes al usuario.
-   * @param mensaje Mensaje a mostrar.
-   */
-    public void mostrarMensaje(String mensaje) {
-      JOptionPane.showMessageDialog(this, mensaje);
+     * Establece el controlador para gestionar la vista principal de la aplicación.
+     * 
+     * @param controladorH El controlador que gestiona la vista principal de la aplicación (carga de clientes, entre otros).
+     */
+    public void setControladorH(cHome controladorH) {
+        this.controladorH = controladorH;
     }
 
+    /**
+     * Muestra un mensaje al usuario en una ventana emergente.
+     * Este método puede ser utilizado para mostrar alertas, errores o información al usuario.
+     * 
+     * @param mensaje El mensaje que se mostrará en la ventana emergente.
+     */
+    public void mostrarMensaje(String mensaje) {
+        JOptionPane.showMessageDialog(this, mensaje);
+    }
+
+    /**
+     * Establece los datos de un cliente en los campos de texto de la ventana.
+     * Este método es útil cuando se desea modificar los datos de un cliente seleccionado previamente.
+     * 
+     * @param cliente El objeto Cliente con los datos a mostrar en los campos.
+     */
     public void datosCliente(Cliente cliente) {
         // Establecer los valores de los campos con los datos del cliente
         idCliente = cliente.getIdCliente();
@@ -196,13 +228,24 @@ public class vistaRegCliente extends JFrame {
         txtTelefono.setText(cliente.getTelefono());
     }
 
+    /**
+     * Obtiene el botón "Registrar" de la vista.
+     * 
+     * @return El botón "Registrar" de la vista.
+     */
     public JButton getBtnNuevo() {
         return btnNuevo;
     }
 
+    /**
+     * Obtiene el botón "Modificar" de la vista.
+     * 
+     * @return El botón "Modificar" de la vista.
+     */
     public JButton getBtnModificar() {
         return btnModificar;
     }
+
     
     
 }

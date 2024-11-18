@@ -5,11 +5,13 @@
 package Vista;
 
 /**
- *
+ * Clase vistaLogin que representa la ventana de inicio de sesión en la aplicación.
+ * Esta clase extiende JFrame y contiene los componentes necesarios para que el usuario 
+ * ingrese su nombre de usuario y contraseña, y posteriormente inicie sesión.
  * @author EMMANUEL
  */
-import Controlador.cRegEmpleado;
 import Controlador.cHome;
+import Controlador.cRegEmpleado;
 import Controlador.cLogin;
 import Controlador.cUsuario;
 import javax.swing.*;
@@ -20,7 +22,9 @@ import java.awt.event.ActionListener;
 public class vistaLogin extends JFrame {
     
     private cRegEmpleado controladorE ;
+    private cHome controladorH;
     private cLogin controladorL;
+    private vistaHome vistaH;
     
     // Color de fondo
     private final Color backgroundColor = new Color(0x15, 0x22, 0x31);
@@ -42,6 +46,10 @@ public class vistaLogin extends JFrame {
     
     private JLabel createAccountLabel; 
     
+    /**
+     * Constructor que configura la ventana de inicio de sesión.
+     * Inicializa los componentes de la interfaz gráfica y ajusta las propiedades de la ventana.
+     */
     public vistaLogin() {
         // Configuración de la ventana
         setTitle("Login");
@@ -52,6 +60,10 @@ public class vistaLogin extends JFrame {
         initComponents();
     }
     
+    /**
+     * Método para inicializar y configurar los componentes de la interfaz de usuario.
+     * Establece los detalles visuales, la disposición y agrega los componentes al panel.
+     */
     private void initComponents(){
         
         // Panel principal
@@ -113,8 +125,8 @@ public class vistaLogin extends JFrame {
             public void mouseClicked(java.awt.event.MouseEvent evt) {                
                 vistaRegUsuario regUsuario = new vistaRegUsuario();
                 new cUsuario (regUsuario);
+                new cHome(regUsuario);
                 regUsuario.setVisible(true);
-                
                 dispose(); // Cerrar la ventana de login al abrir el registro
             }
         });
@@ -126,7 +138,7 @@ public class vistaLogin extends JFrame {
                 String username = userField.getText();
                 String password = new String(passwordField.getPassword());
                 // lógica de inicio de sesión
-                controladorL.validarCredenciales(username, password);            
+                controladorL.validarCredenciales(username, password);
             }
         });
 
@@ -135,15 +147,26 @@ public class vistaLogin extends JFrame {
         
     }
 
+    /**
+     * Establece el controlador para la vista de inicio de sesión.
+     * 
+     * @param controladorL El controlador que gestiona las acciones relacionadas con el inicio de sesión.
+     */
     public void setControladorL(cLogin controladorL) {
         this.controladorL = controladorL;
     }
     
+    public void setControladorH (cHome controladorH){
+        this.controladorH = controladorH;
+    }
+
     /**
-   * Método para mostrar mensajes al usuario.
-   * @param mensaje Mensaje a mostrar.
-   */
+     * Muestra un mensaje en una ventana emergente (JOptionPane).
+     * Este método puede ser utilizado para mostrar alertas, errores o información al usuario.
+     * 
+     * @param mensaje El mensaje que se mostrará en la ventana emergente.
+     */
     public void mostrarMensaje(String mensaje) {
-      JOptionPane.showMessageDialog(this, mensaje);
+        JOptionPane.showMessageDialog(this, mensaje);
     }
 }

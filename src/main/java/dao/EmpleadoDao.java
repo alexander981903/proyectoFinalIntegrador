@@ -12,28 +12,29 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-
 /**
- *
+ * Clase DAO que maneja las operaciones de base de datos para la entidad Empleado.
+ * 
  * @author EMMANUEL
  */
 public class EmpleadoDao {
     private Connection conexion;
+
     /**
-   * Constructor que inicializa la conexión a la base de datos.
-   */
+     * Constructor que inicializa la conexión a la base de datos.
+     */
     public EmpleadoDao() {
         this.conexion = DataSource.obtenerConexion();
     }
-    
+
     /**
-   * Método para insertar un nuevo empleado en la base de datos.
-   * @param empleado Objeto Empleado a insertar.
-   * @return true si la inserción fue exitosa, false de lo contrario.
-   */
-    public boolean insertarEmpleado(Empleado empleado){
+     * Método para insertar un nuevo empleado en la base de datos.
+     * 
+     * @param empleado Objeto Empleado a insertar.
+     * @return true si la inserción fue exitosa, false de lo contrario.
+     */
+    public boolean insertarEmpleado(Empleado empleado) {
         String sql = "INSERT INTO empleado (nombreEmpleado, cargo, turno) VALUES (?, ?, ?)";
-        //PreparedStatement evitar inyecciones SQL y manejar los parámetros de manera segura
         try (PreparedStatement ps = conexion.prepareStatement(sql)) {
             ps.setString(1, empleado.getNombreEmp());
             ps.setString(2, empleado.getCargo());
@@ -41,23 +42,23 @@ public class EmpleadoDao {
 
             ps.executeUpdate();
             return true;        
-        }catch (SQLException e) {
-          System.err.println("Error al insertar Empleado En la capaDAO: " + e.getMessage());
-          return false;
+        } catch (SQLException e) {
+            System.err.println("Error al insertar Empleado en la capa DAO: " + e.getMessage());
+            return false;
         }
     }
-    
+
     /**
-   * Método para obtener todos los empleados de la base de datos.
-   * @return Lista de productos.
-   */
-    
-    public ArrayList<Empleado> obtenerTodosEmpleados(){
+     * Método para obtener todos los empleados de la base de datos.
+     * 
+     * @return Lista de empleados.
+     */
+    public ArrayList<Empleado> obtenerTodosEmpleados() {
         ArrayList<Empleado> empleados = new ArrayList<>();
         String sql = "SELECT * FROM empleado";
-        try(PreparedStatement ps = conexion.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery()){
-            while(rs.next()){
+        try (PreparedStatement ps = conexion.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
                 Empleado emp = new Empleado();
                 emp.setIdEmpleado(rs.getInt("idEmpleado"));
                 emp.setNombreEmp(rs.getString("nombreEmpleado"));
@@ -65,19 +66,19 @@ public class EmpleadoDao {
                 emp.setTurno(rs.getString("turno"));
                 empleados.add(emp);
             }
-        }catch(SQLException e){
-            System.err.println("Error al obtener Empleados: " + e.getMessage());
+        } catch (SQLException e) {
+            System.err.println("Error al obtener empleados: " + e.getMessage());
         }
         return empleados;
     }
-    
+
     /**
-     * Obtiene un empleado específico de la base de datos.
+     * Método para obtener un empleado específico de la base de datos por su ID.
      * 
      * @param idEmpleado El ID del empleado que se desea obtener.
-     * @return El objeto empleado correspondiente al ID, o null si no se encuentra.
+     * @return El objeto Empleado correspondiente al ID, o null si no se encuentra.
      */
-     public Empleado buscarPorId(int idEmpleado) {
+    public Empleado buscarPorId(int idEmpleado) {
         String sql = "SELECT * FROM empleado WHERE idEmpleado=?";
         try (Connection conn = DataSource.obtenerConexion();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -85,32 +86,68 @@ public class EmpleadoDao {
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 // Retorna un nuevo objeto Empleado con los datos obtenidos
-                return new Empleado (
+                return new Empleado(
                     rs.getInt("idEmpleado"),
                     rs.getString("nombreEmpleado"),
                     rs.getString("cargo"),
-                    rs.getString("Turno")
+                    rs.getString("turno")
                 );
             }
         } catch (SQLException e) {
-            System.err.println("Error al obtener Empleado: " + e.getMessage());
+            System.err.println("Error al obtener empleado: " + e.getMessage());
         }
         return null; // Retorna null si no se encuentra el empleado
     }
-     
-    public boolean actualizarEmpleado(Empleado emp){
+
+    /**
+     * Método para actualizar los datos de un empleado en la base de datos.
+     * 
+     * @param emp El objeto Empleado con los datos actualizados.
+     * @return true si la actualización fue exitosa, false de lo contrario.
+     */
+    public boolean actualizarEmpleado(Empleado emp) {
         String sql = "UPDATE empleado SET nombreEmpleado = ?, cargo = ?, turno = ? WHERE idEmpleado = ?";
         try (PreparedStatement ps = conexion.prepareStatement(sql)) {
             ps.setString(1, emp.getNombreEmp());
             ps.setString(2, emp.getCargo());
-            ps.setString(3,emp.getTurno());
+            ps.setString(3, emp.getTurno());
             ps.setInt(4, emp.getIdEmpleado());
             ps.executeUpdate();
             return true;
         } catch (SQLException e) {
-            System.err.println("Error al actualizar Empleado: " + e.getMessage());
+            System.err.println("Error al actualizar empleado: " + e.getMessage());
             return false;
         }
     }
     
+    /**
+     * Método para buscar empleados en la base de datos por su nombre.
+     * 
+     * @param nombre El nombre que se desea buscar en la base de datos.
+     * @return Una lista de objetos Empleado que coinciden con el nombre buscado.
+     */
+    public ArrayList<Empleado> buscarEmpleadoPorNombre(String nombre) {
+        ArrayList<Empleado> empleados = new ArrayList<>();
+        String sql = "SELECT * FROM empleado WHERE nombreEmpleado LIKE ?";
+        
+        // Utilizamos el signo de porcentaje '%' para hacer coincidir cualquier parte del nombre
+        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+            ps.setString(1, "%" + nombre + "%");  // El '%' indica que puede haber cualquier cosa antes o después del nombre
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Empleado emp = new Empleado();
+                    emp.setIdEmpleado(rs.getInt("idEmpleado"));
+                    emp.setNombreEmp(rs.getString("nombreEmpleado"));
+                    emp.setCargo(rs.getString("cargo"));
+                    emp.setTurno(rs.getString("turno"));
+                    
+                    empleados.add(emp);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al buscar clientes por nombre: " + e.getMessage());
+        }
+        return empleados;
+    }
 }

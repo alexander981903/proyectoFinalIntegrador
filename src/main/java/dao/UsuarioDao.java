@@ -4,10 +4,6 @@
  */
 package dao;
 
-/**
- *
- * @author EMMANUEL
- */
 import Modelo.Usuario;
 import Modelo.Empleado;
 import Modelo.Cliente;
@@ -23,6 +19,8 @@ import java.util.Base64;
 
 /**
  * Clase para manejar las operaciones CRUD de Usuario en la base de datos.
+ * 
+ * @author EMMANUEL
  */
 public class UsuarioDao {
     private Connection conexion;
@@ -36,6 +34,7 @@ public class UsuarioDao {
 
     /**
      * Método para insertar un nuevo usuario en la base de datos.
+     * 
      * @param user Objeto Usuario a insertar.
      * @return true si la inserción fue exitosa, false de lo contrario.
      */
@@ -73,12 +72,9 @@ public class UsuarioDao {
         }
     }
 
-
-
-
-
     /**
      * Método para obtener todos los usuarios de la base de datos.
+     * 
      * @return Lista de usuarios.
      */
     public ArrayList<Usuario> obtenerTodosUsuarios(){
@@ -124,7 +120,14 @@ public class UsuarioDao {
         }
         return usuarios;
     }
-    
+
+    /**
+     * Método para validar las credenciales de un usuario.
+     * 
+     * @param login El login del usuario.
+     * @param clave La clave del usuario.
+     * @return El objeto Usuario si las credenciales son correctas, null en caso contrario.
+     */
     public Usuario validarCredenciales(String login, String clave) {
         String sql = "SELECT u.login, u.clave, u.rol, u.idEmpleado, u.idCliente, " +
                  "e.nombreEmpleado, e.cargo, e.turno, c.nombre, c.apellido, c.email, c.telefono " +
@@ -182,8 +185,12 @@ public class UsuarioDao {
         return null;  // Si las credenciales no son correctas, devolvemos null
     }
 
-    
-    // Método para hashear la contraseña
+    /**
+     * Método para hashear la contraseña utilizando SHA-256.
+     * 
+     * @param password La contraseña a hashear.
+     * @return La contraseña hasheada en formato Base64.
+     */
     private String hashPassword(String password) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
