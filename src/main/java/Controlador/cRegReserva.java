@@ -58,7 +58,7 @@ public class cRegReserva {
 
     /**
      * Realiza el pedido y la reserva.Este método recoge los datos de la vista y luego llama al método correspondiente 
- en el DAO de Pedido para realizar el pedido y la reserva en la base de datos.
+     * en el DAO de Pedido para realizar el pedido y la reserva en la base de datos.
      * 
      * @param idCliente ID del cliente que realiza la reserva.
      * @param idMesa ID de la mesa reservada.
@@ -66,22 +66,32 @@ public class cRegReserva {
      * @param fechaReserva Fecha de la reserva.
      * @param horaReserva Hora de la reserva.
      * @param duracionReserva Duración de la reserva en minutos.
-     * @return true si el pedido y la reserva fueron realizados correctamente, false si hubo un error.
      */
-    public boolean realizarPedidoYReserva(int idCliente, int idMesa, ArrayList<Producto> productos, Date fechaReserva, Time horaReserva, int duracionReserva) {
-        // Llamar al método realizarPedidoYReserva del DAO de Pedido
-        boolean resultado = daoPedido.realizarPedidoYReserva(idCliente, new Date(System.currentTimeMillis()), 
-                idMesa, productos, fechaReserva, horaReserva, duracionReserva);
-        
-        // Verificar el resultado y actualizar la vista en consecuencia
+    public void realizarPedidoYReserva(int idCliente, int idMesa, ArrayList<Producto> productos, 
+                                       Date fechaReserva, Time horaReserva, int duracionReserva) {
+        // Obtener la fecha actual para el pedido
+        Date fechaPedido = new Date(System.currentTimeMillis());
+
+        // Llamar al método del DAO para realizar el pedido y la reserva
+        boolean resultado = daoPedido.realizarPedidoYReserva(
+                idCliente, 
+                fechaPedido, 
+                idMesa, 
+                productos, 
+                fechaReserva, 
+                horaReserva, 
+                duracionReserva
+        );
+
+        // Actualizar la vista según el resultado
         if (resultado) {
             vistaRR.mostrarMensaje("Reserva y pedido realizados con éxito.");
+            vistaRR.dispose();
         } else {
             vistaRR.mostrarMensaje("Hubo un error al realizar la reserva y el pedido.");
         }
-        
-        return resultado;
     }
+
     
     
     /**
@@ -115,5 +125,8 @@ public class cRegReserva {
         }
         return productos;
     }
+    
+    
+    
 }
 

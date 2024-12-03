@@ -44,6 +44,42 @@ public class MesaDao {
             return false;
         }
     }
+    
+    public int agregarMesa(int numeroMesa, int capacidad, String estado) {
+        String sql = "INSERT INTO mesa (numeroMesa, capacidad, estadoMesa) VALUES (?, ?, ?)";
+        try (PreparedStatement ps = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, numeroMesa);
+            ps.setInt(2, capacidad);
+            ps.setString(3, estado);
+
+            ps.executeUpdate();
+
+            // Recuperar el ID generado
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al agregar mesa: " + e.getMessage());
+        }
+        return -1; // Retorna -1 si no se pudo insertar
+    }
+    
+    public int obtenerUltimoIdMesa() {
+        String sql = "SELECT MAX(idMesa) AS idMesa FROM mesa";
+        try (PreparedStatement ps = conexion.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt("idMesa");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener el último ID de la mesa: " + e.getMessage());
+        }
+        return -1; // Retorna -1 si no se pudo obtener
+    }
+
+
 
     /**
      * Método para obtener todas las mesas de la base de datos.
@@ -115,4 +151,6 @@ public class MesaDao {
             return false;
         }
     }
+    
+    
 }

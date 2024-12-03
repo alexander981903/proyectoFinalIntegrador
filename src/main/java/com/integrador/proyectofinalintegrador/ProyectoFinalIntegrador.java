@@ -4,7 +4,6 @@
 
 package com.integrador.proyectofinalintegrador;
 
-import Controlador.cHome;
 import Controlador.cLogin;
 import Vista.vistaLogin;
 import javax.swing.SwingUtilities;

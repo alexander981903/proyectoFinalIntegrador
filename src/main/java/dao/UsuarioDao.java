@@ -39,38 +39,92 @@ public class UsuarioDao {
      * @return true si la inserción fue exitosa, false de lo contrario.
      */
     public boolean insertarUsuario(Usuario user) {
-        String sql = "INSERT INTO usuario (login, clave, rol, idEmpleado, idCliente) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
-            // Hashear la contraseña antes de almacenarla
-            String hashedPassword = hashPassword(user.getClave());
-            // Establece los parámetros de la consulta
-            ps.setString(1, user.getLogin());
-            ps.setString(2, hashedPassword);
-            ps.setString(3, user.getRol());
+        String sqlUsuario = "INSERT INTO usuario (login, clave, rol, idEmpleado, idCliente) VALUES (?, ?, ?, ?, ?)";
+        String sqlEmpleado = "INSERT INTO empleado (nombreEmpleado, cargo, turno) VALUES (?, ?, ?)";
+        String sqlCliente = "INSERT INTO cliente (nombre,apellido,email, telefono, dni) VALUES (?, ?, ?, ?, ?)";
 
-            // Asigna idEmpleado o idCliente según el tipo de objeto almacenado en 'obj'
-            if (user.getObj() instanceof Empleado) {
-                Empleado empleado = (Empleado) user.getObj();
-                ps.setInt(4, empleado.getIdEmpleado());
-                ps.setNull(5, java.sql.Types.INTEGER);  // idCliente es NULL
-            } else if (user.getObj() instanceof Cliente) {
-                Cliente cliente = (Cliente) user.getObj();
-                ps.setNull(4, java.sql.Types.INTEGER);  // idEmpleado es NULL
-                ps.setInt(5, cliente.getIdCliente());
-            } else {
-                ps.setNull(4, java.sql.Types.INTEGER);  // Ambos son NULL si no es ni cliente ni empleado
-                ps.setNull(5, java.sql.Types.INTEGER);
+        try {
+            conexion.setAutoCommit(false);  // Inicia la transacción
+
+            int idGenerado = -1;
+
+            // Inserta Empleado o Cliente según corresponda
+            if (user.getObj() instanceof Empleado empleado) {
+                try (PreparedStatement psEmpleado = conexion.prepareStatement(sqlEmpleado, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                    psEmpleado.setString(1, empleado.getNombreEmp());
+                    psEmpleado.setString(2, empleado.getCargo());
+                    psEmpleado.setString(3, empleado.getTurno());
+                    psEmpleado.executeUpdate();
+
+                    try (ResultSet rs = psEmpleado.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            idGenerado = rs.getInt(1);  // Recupera el ID generado del Empleado
+                        }
+                    }
+                }
+            } else if (user.getObj() instanceof Cliente cliente) {
+                try (PreparedStatement psCliente = conexion.prepareStatement(sqlCliente, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                    psCliente.setString(1, cliente.getNombre());
+                    psCliente.setString(2, cliente.getApellido());
+                    psCliente.setString(3, cliente.getEmail());
+                    psCliente.setString(4, cliente.getTelefono());
+                    psCliente.setString(5, cliente.getDni());
+                    psCliente.executeUpdate();
+
+                    try (ResultSet rs = psCliente.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            idGenerado = rs.getInt(1);  // Recupera el ID generado del Cliente
+                        }
+                    }
+                }
             }
 
-            // Ejecuta la consulta de inserción
-            int rowsAffected = ps.executeUpdate();
-            return rowsAffected > 0;  // Devuelve true si se inserta correctamente
+            if (idGenerado == -1) {
+                conexion.rollback();  // Revertir si falla la inserción
+                return false;
+            }
 
+            // Inserta el Usuario con el ID recuperado
+            try (PreparedStatement psUsuario = conexion.prepareStatement(sqlUsuario)) {
+                String hashedPassword = hashPassword(user.getClave());
+                psUsuario.setString(1, user.getLogin());
+                psUsuario.setString(2, hashedPassword);
+                psUsuario.setString(3, user.getRol());
+
+                if (user.getObj() instanceof Empleado) {
+                    psUsuario.setInt(4, idGenerado);
+                    psUsuario.setNull(5, java.sql.Types.INTEGER);
+                } else if (user.getObj() instanceof Cliente) {
+                    psUsuario.setNull(4, java.sql.Types.INTEGER);
+                    psUsuario.setInt(5, idGenerado);
+                }
+
+                int rowsAffected = psUsuario.executeUpdate();
+                if (rowsAffected > 0) {
+                    conexion.commit();  // Confirmar transacción
+                    return true;
+                } else {
+                    conexion.rollback();
+                    return false;
+                }
+            }
         } catch (SQLException e) {
-            System.err.println("Error al insertar usuario: " + e.getMessage());
+            try {
+                conexion.rollback();
+            } catch (SQLException ex) {
+                System.err.println("Error al revertir la transacción: " + ex.getMessage());
+            }
+            System.err.println("Error al insertar usuario con transacción: " + e.getMessage());
             return false;
+        } finally {
+            try {
+                conexion.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.err.println("Error al restaurar el auto-commit: " + e.getMessage());
+            }
         }
     }
+
 
     /**
      * Método para obtener todos los usuarios de la base de datos.
@@ -109,7 +163,7 @@ public class UsuarioDao {
             } else {
                 // Aquí puedes optar por pasar la información completa del cliente
                 Cliente cliente = new Cliente(idCliente, rs.getString("nombre"),rs.getString("apellido"),
-                        rs.getString("email"),rs.getString("telefono"));
+                        rs.getString("email"),rs.getString("telefono"), rs.getString("dni"));
                 user.setObj(cliente);
             }
             
@@ -130,7 +184,7 @@ public class UsuarioDao {
      */
     public Usuario validarCredenciales(String login, String clave) {
         String sql = "SELECT u.login, u.clave, u.rol, u.idEmpleado, u.idCliente, " +
-                 "e.nombreEmpleado, e.cargo, e.turno, c.nombre, c.apellido, c.email, c.telefono " +
+                 "e.nombreEmpleado, e.cargo, e.turno, c.nombre, c.apellido, c.email, c.telefono, c.dni " +
                  "FROM usuario u " +
                  "LEFT JOIN empleado e ON u.idEmpleado = e.idEmpleado " +
                  "LEFT JOIN cliente c ON u.idCliente = c.idCliente " +
@@ -156,17 +210,22 @@ public class UsuarioDao {
                         // Si idEmpleado es nulo, lo dejamos como null, si no, lo establecemos
                         int idEmpleado = rs.getInt("idEmpleado");
                         if (!rs.wasNull()) {
-                            Empleado empleado = new Empleado(idEmpleado, rs.getString("nombreEmpleado"),
-                                                              rs.getString("cargo"), rs.getString("turno"));
+                            Empleado empleado = new Empleado(idEmpleado, 
+                                 rs.getString("nombreEmpleado"),
+                                    rs.getString("cargo"), 
+                                    rs.getString("turno"));
                             user.setObj(empleado);
                         }
 
                         // Si idCliente es nulo, lo dejamos como null, si no, lo establecemos
                         int idCliente = rs.getInt("idCliente");
                         if (!rs.wasNull()) {
-                            Cliente cliente = new Cliente(idCliente, rs.getString("nombre"),
-                                                          rs.getString("apellido"), rs.getString("email"),
-                                                          rs.getString("telefono"));
+                            Cliente cliente = new Cliente(idCliente, 
+                                 rs.getString("nombre"),
+                                rs.getString("apellido"), 
+                                  rs.getString("email"),
+                                rs.getString("telefono"),
+                                    rs.getString("dni"));
                             user.setObj(cliente);
                         }
 
@@ -195,9 +254,42 @@ public class UsuarioDao {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] hashedBytes = md.digest(password.getBytes());
-            return Base64.getEncoder().encodeToString(hashedBytes); // Convierte a Base64 para almacenar
+            return Base64.getEncoder().encodeToString(hashedBytes);
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Error al hashear la contraseña", e);
         }
     }
+    
+    /**
+    * Método que valida si ya existe un usuario con el rol de "Empleado" 
+    * y el cargo de "Administrador" en el sistema. Este método realiza una 
+    * consulta en las tablas `usuario` y `empleado` para verificar si ya 
+    * hay un usuario registrado con ese rol y cargo específicos.
+    * 
+    * Si la consulta devuelve un resultado mayor a cero, significa que ya existe 
+    * al menos un administrador en el sistema. Si no es así, el método 
+    * devuelve `false`, indicando que aún no se ha registrado un administrador.
+    * 
+    * @return `true` si ya existe un usuario con rol "Empleado" y cargo "Administrador", 
+    *         `false` en caso contrario.
+    */    
+    public boolean existeAdmin() {
+        String sql = "SELECT COUNT(*) FROM usuario u " +
+                     "INNER JOIN empleado e ON u.idEmpleado = e.idEmpleado " +
+                     "WHERE u.rol = 'Empleado' AND e.cargo = 'Administrador'";
+
+        try (PreparedStatement ps = conexion.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                // Si el conteo es mayor a 0, significa que ya existe un administrador
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al verificar la existencia de administrador: " + e.getMessage());
+        }
+
+        return false;  // Si no existe administrador, devolvemos false
+    }
+
+    
 }

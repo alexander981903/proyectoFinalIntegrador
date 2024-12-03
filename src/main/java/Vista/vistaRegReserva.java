@@ -8,6 +8,7 @@ import Controlador.cHome;
 import Controlador.cRegPedido;
 import Controlador.cRegReserva;
 import Modelo.Cliente;
+import Modelo.Mesa;
 import Modelo.Producto;
 import Modelo.Usuario;
 import RenderingTable.DecimalFormatRenderer;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
@@ -37,15 +39,18 @@ public class vistaRegReserva extends JFrame {
     private DefaultTableModel cartaTableModel;
     private DefaultTableModel pedidosTableModel;
     private JTextField mesaField;
+    private JTextField igvField;
+    private JTextField subtotalField;
+    private JTextField totalField;
     private JDateChooser fechaChooser;
     private JSpinner horaSpinner;       
     private JSpinner duracionSpinner;
     private JButton confirmarReservaButton;
     private Usuario usuarioAutenticado;
-    private int numeroMesa;
     private cHome controladorH;
     private cRegReserva controladorRR;
     private JComboBox comboBoxClientes;
+    private Mesa mesa;
     
     // Colores personalizados
     private final Color backgroundColor = new Color(0x0B, 0x11, 0x19);
@@ -56,8 +61,9 @@ public class vistaRegReserva extends JFrame {
      * Constructor de la clase vistaRegReserva.
      * Inicializa los componentes y configura la ventana de la interfaz gráfica.
      */
-    public vistaRegReserva(int numeroMesa) {
-        this.numeroMesa = numeroMesa;
+    public vistaRegReserva(Mesa mesa, Usuario usuarioAutenticado) {
+        this.usuarioAutenticado = usuarioAutenticado;
+        this.mesa = mesa;
         initComponents();
     }
 
@@ -65,27 +71,33 @@ public class vistaRegReserva extends JFrame {
      * Método para inicializar los componentes de la ventana.
      * Configura la tabla del menú, los campos de texto y los botones para interactuar con la reserva.
      */
-   private void initComponents() {
-        // Configuración de la ventana principal
+    private void initComponents() {
+        
         setTitle("Registrar Reserva");
         setSize(800,650);
         setLocationRelativeTo(null); // Centrar la ventana en la pantalla
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS)); // Usamos BoxLayout para distribución vertical
-
-        // Panel izquierdo para la carta del menú
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setResizable(false);
+        setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+        
         JPanel menuPanel = new JPanel(new BorderLayout());
-        menuPanel.setBorder(BorderFactory.createTitledBorder("Carta del Menú"));
+        TitledBorder titledBorder = BorderFactory.createTitledBorder("Carta del Menú");
+        titledBorder.setTitleColor(textColor); // Cambiar el color del título a blanco
+        menuPanel.setBorder(titledBorder);
 
-        // Crear la tabla cartaTable
+        menuPanel.setSize(700,500);
+        menuPanel.setBackground(backgroundColor);
+        menuPanel.setForeground(textColor);
+        
         cartaTableModel = new NonEditableTableModel(
                 new Object[]{"ID", "Plato", "Personal", "Fuente"}, 0);
         cartaTable = new JTable(cartaTableModel);
         cartaTable.setFillsViewportHeight(true);
-        cartaTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS); // Ajustar el tamaño de las columnas automáticamente
-        
+        cartaTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+
         cartaTable.getColumnModel().getColumn(1).setPreferredWidth(300);
-        // Aplicar DecimalFormatRenderer a las columnas de precios
+        
         TableColumn personalColumn = cartaTable.getColumnModel().getColumn(2);
         personalColumn.setCellRenderer(new DecimalFormatRenderer(cartaTable));
         TableColumn familiarColumn = cartaTable.getColumnModel().getColumn(3);
@@ -93,34 +105,64 @@ public class vistaRegReserva extends JFrame {
 
         JScrollPane menuScrollPane = new JScrollPane(cartaTable);
         menuPanel.add(menuScrollPane, BorderLayout.CENTER);
-        menuPanel.setPreferredSize(new Dimension(350, 400)); // Tamaño preferido para que se ajuste a la ventana
+        menuPanel.setPreferredSize(new Dimension(550, 400));
 
-        // Panel derecho principal para los datos de la reserva
-        JPanel reservaPanel = new JPanel(new BorderLayout()); // Layout principal para organizar los subpaneles
-        reservaPanel.setBorder(BorderFactory.createTitledBorder("Datos de la Reserva"));
-
-        // Subpanel para los campos de entrada
-        JPanel camposPanel = new JPanel(new GridLayout(6, 2, 5, 5));  // Panel con los campos de entrada
-        camposPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Para mejorar el espaciado
-
-        // Campos de entrada de datos
-        camposPanel.add(new JLabel("Cliente:"));
-        comboBoxClientes = new JComboBox();
-        comboBoxClientes.setEditable(false);
-        camposPanel.add(comboBoxClientes);
+         // Panel derecho principal para los datos de la reserva
+        JPanel reservaPanel = new JPanel(new BorderLayout());
+        TitledBorder titledReserva = BorderFactory.createTitledBorder("Datos de la Reserva");
+        titledReserva.setTitleColor(textColor);
+        reservaPanel.setBorder(titledReserva);
+        reservaPanel.setBackground(backgroundColor);
+        reservaPanel.setForeground(textColor);
         
+        JPanel camposPanel = new JPanel(new GridLayout(6, 2, 5, 5));
+        camposPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        camposPanel.setBackground(backgroundColor);
+        camposPanel.setForeground(textColor);
         
+        JLabel lblClientes = new JLabel("Cliente: ");
+        lblClientes.setForeground(textColor);
+        camposPanel.add(lblClientes);
 
-        camposPanel.add(new JLabel("Mesa:"));
-        mesaField = new JTextField("Mesa " + numeroMesa);
+        if(usuarioAutenticado.getRol().equals("Empleado")){
+            comboBoxClientes = new JComboBox();
+            comboBoxClientes.setEditable(false);
+            camposPanel.add(comboBoxClientes);
+
+            comboBoxClientes.setRenderer(new DefaultListCellRenderer() {
+                @Override
+                public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                    super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                    Cliente cliente = (Cliente) value;
+                    setText(cliente.getIdCliente() + " || " + cliente.getNombre() + " || " + cliente.getApellido());
+                    return this;
+                }
+            });
+
+        }else if(usuarioAutenticado.getRol().equals("Cliente")){
+            JTextField clienteField = new JTextField(20);
+            clienteField.setText(usuarioAutenticado.getLogin());
+            clienteField.setEditable(false);
+            camposPanel.add(clienteField);
+        }
+
+
+        JLabel lblMesa = new JLabel("Mesa:");
+        lblMesa.setForeground(textColor);
+        camposPanel.add(lblMesa);
+        mesaField = new JTextField("Mesa " + mesa.getNumeroMesa());
         mesaField.setEditable(false);
         camposPanel.add(mesaField);
 
-        camposPanel.add(new JLabel("Fecha:"));
+        JLabel lblFecha = new JLabel("Fecha:");
+        lblFecha.setForeground(textColor);
+        camposPanel.add(lblFecha);
         fechaChooser = new JDateChooser();
         camposPanel.add(fechaChooser);
 
-        camposPanel.add(new JLabel("Hora:"));
+        JLabel lblHora = new JLabel("Hora:");
+        lblHora.setForeground(textColor);
+        camposPanel.add(lblHora);
         Date horaInicial = new Date();
         SpinnerDateModel horaModelo = new SpinnerDateModel(horaInicial, null, null, java.util.Calendar.HOUR_OF_DAY);
         horaSpinner = new JSpinner(horaModelo);
@@ -128,33 +170,33 @@ public class vistaRegReserva extends JFrame {
         horaSpinner.setEditor(editor);
         camposPanel.add(horaSpinner);
 
-        camposPanel.add(new JLabel("Duración (minutos):"));
+        JLabel lblDuracion = new JLabel("Duración (minutos):");
+        lblDuracion.setForeground(textColor);
+        camposPanel.add(lblDuracion);
         duracionSpinner = new JSpinner(new SpinnerNumberModel(60, 30, 240, 15));
         camposPanel.add(duracionSpinner);
-
-        // Agregar el subpanel de campos al panel derecho
+        
         reservaPanel.add(camposPanel, BorderLayout.CENTER);
-
-        // Subpanel para los botones
+        
         JPanel botonesPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         confirmarReservaButton = new JButton("Confirmar Reserva");
+        botonesPanel.setBackground(backgroundColor);
         botonesPanel.add(confirmarReservaButton);
         reservaPanel.add(botonesPanel, BorderLayout.SOUTH);
-
-        // Crear un panel superior para contener menuPanel y reservaPanel
+        
         JPanel panelSuperior = new JPanel(new BorderLayout());
+        panelSuperior.setBackground(backgroundColor);
         panelSuperior.add(menuPanel, BorderLayout.WEST);
         panelSuperior.add(reservaPanel, BorderLayout.CENTER);
-
-        // Agregar el panel superior a la parte superior de la ventana principal
-        add(panelSuperior); // Lo agregamos sin usar BorderLayout.NORTH, porque ahora estamos usando BoxLayout
-
-        // Crear el panel inferior para realizar el pedido
+        
+        add(panelSuperior);
+        
         JPanel pedidoPanel = new JPanel(new BorderLayout());
         pedidoPanel.setBackground(backgroundColor);
-        pedidoPanel.setBorder(BorderFactory.createTitledBorder("Pedido"));
-
-        // Crear la tabla para almacenar los productos (platos), la cantidad y el precio
+        TitledBorder titledPedido = BorderFactory.createTitledBorder("Pedido");
+        titledPedido.setTitleColor(textColor);
+        pedidoPanel.setBorder(titledPedido);
+        
         pedidosTableModel = new DefaultTableModel(
                 new Object[]{"ID","Nombre del Plato","Tamaño", "Cantidad", "Precio", "Total"}, 0);
         JTable pedidosTable = new JTable(pedidosTableModel);
@@ -163,92 +205,159 @@ public class vistaRegReserva extends JFrame {
         pedidosTable.getColumnModel().getColumn(0).setWidth(0);
 
         JScrollPane pedidosScrollPane = new JScrollPane(pedidosTable);
-
-        // Crear un subpanel para la tabla y agregarla al panel izquierdo de pedidoPanel
+        
         JPanel tablaPanel = new JPanel(new BorderLayout());
+        tablaPanel.setBackground(backgroundColor);
         tablaPanel.add(pedidosScrollPane, BorderLayout.CENTER);
         pedidoPanel.add(tablaPanel, BorderLayout.CENTER);
-
         
-
-        // Crear un subpanel para el botón y agregarlo al panel derecho de pedidoPanel
-        JPanel botonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        pedidoPanel.add(botonPanel, BorderLayout.EAST);
-
-        // Agregar el pedidoPanel a la ventana principal
+        JPanel subPanel = new JPanel();
+        subPanel.setLayout(new BoxLayout(subPanel, BoxLayout.Y_AXIS));
+        subPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JPanel subtotalPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JLabel subtotalLabel = new JLabel("Subtotal:");
+        subtotalField = new JTextField(10);
+        subtotalField.setEditable(false);
+        subtotalField.setHorizontalAlignment(JTextField.RIGHT);
+        subtotalPanel.add(subtotalLabel);
+        subtotalPanel.add(subtotalField);
+        subPanel.add(subtotalPanel);
+        
+        JPanel igvPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JLabel igvLabel = new JLabel("IGV:");
+        igvField = new JTextField(10);
+        igvField.setEditable(false);
+        igvField.setHorizontalAlignment(JTextField.RIGHT);
+        igvPanel.add(igvLabel);
+        igvPanel.add(igvField);
+        subPanel.add(igvPanel);
+        
+        JPanel totalPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JLabel totalLabel = new JLabel("Total:");
+        totalField = new JTextField(10);
+        totalField.setEditable(false);
+        totalField.setHorizontalAlignment(JTextField.RIGHT);
+        totalPanel.add(totalLabel);
+        totalPanel.add(totalField);
+        subPanel.add(totalPanel);
+        
+        pedidoPanel.add(subPanel, BorderLayout.EAST);
+        
         add(pedidoPanel);
         
-        // Agregar MouseListener para abrir vistaRegPedido al hacer clic en una fila
         cartaTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 1 && cartaTable.getSelectedRow() != -1) {
-                    
+
                     int selectedRow = cartaTable.getSelectedRow();
                     int idPlato = (int) cartaTable.getValueAt(selectedRow, 0);                    
                     vistaRegPedido vistaRegPedido = new vistaRegPedido(vistaRegReserva.this);
                     vistaRegPedido.setIdPlato(idPlato);
                     vistaRegPedido.setVisible(true);                   
                     new cRegPedido(vistaRegPedido);
-                    
+
                 }
             }
         });
-        
-        comboBoxClientes.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                Cliente cliente = (Cliente) value;
-                setText(cliente.getIdCliente() + " || " + cliente.getNombre() + " || " + cliente.getApellido());
-                return this;
-            }
-        });
-        
+
+
         confirmarReservaButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    try {
-                // Obtener el cliente seleccionado
-                Cliente cliente = (Cliente) comboBoxClientes.getSelectedItem();
-                if (cliente == null) {
-                    mostrarMensaje("Seleccione un cliente.");
-                    return;
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+
+                    if(usuarioAutenticado.getRol().equals("Empleado")){
+                        Cliente cliente = (Cliente) comboBoxClientes.getSelectedItem();
+                        if (cliente == null) {
+                            mostrarMensaje("Seleccione un cliente.");
+                            return;
+                        }
+                        int idCliente = cliente.getIdCliente();
+                        int idMesa = mesa.getIdMesa();
+                        Date fechaReserva = fechaChooser.getDate();
+                        if (fechaReserva == null) {
+                            mostrarMensaje("Seleccione una fecha.");
+                            return;
+                        }
+                        java.sql.Date sqlFechaReserva = new java.sql.Date(fechaReserva.getTime());
+                        java.sql.Time horaReserva = new java.sql.Time(((Date) horaSpinner.getValue()).getTime());
+                        int duracionReserva = (int) duracionSpinner.getValue();
+                        
+                        ArrayList<Producto> productos = controladorRR.obtenerProductosDeTabla();
+                        
+                        controladorRR.realizarPedidoYReserva(idCliente, idMesa, productos, sqlFechaReserva, 
+                                 horaReserva, duracionReserva);
+                        controladorH.cargarReservas();
+                        controladorH.mostrarMesaPlano();
+                        dispose();
+
+                    }else if(usuarioAutenticado.getRol().equals("Cliente")){
+                        Cliente usuario = (Cliente) usuarioAutenticado.getObj();
+                        int idCliente = usuario.getIdCliente();
+                        System.out.println("ID cliente: " + idCliente);
+                        int idMesa = mesa.getIdMesa();
+                        Date fechaReserva = fechaChooser.getDate();
+                        if (fechaReserva == null) {
+                            mostrarMensaje("Seleccione una fecha.");
+                            return;
+                        }
+                        java.sql.Date sqlFechaReserva = new java.sql.Date(fechaReserva.getTime());
+                        java.sql.Time horaReserva = new java.sql.Time(((Date) horaSpinner.getValue()).getTime());
+                        int duracionReserva = (int) duracionSpinner.getValue();
+                        
+                        ArrayList<Producto> productos = controladorRR.obtenerProductosDeTabla();
+                        
+                        controladorRR.realizarPedidoYReserva(idCliente, idMesa, productos, sqlFechaReserva, 
+                                 horaReserva, duracionReserva);
+                        controladorH.cargarReservas();
+                        controladorH.mostrarMesaPlano();
+                        dispose();
+                    }
+
+                } catch (Exception ex) {
+                    System.out.println("Error al procesar la reserva: " + ex.getMessage());
                 }
-                int idCliente = cliente.getIdCliente();
-
-                // Obtener el número de mesa
-                int idMesa = numeroMesa;  // Se supone que se obtiene del campo de número de mesa
-
-                // Obtener la fecha y hora de reserva
-                Date fechaReserva = fechaChooser.getDate();
-                if (fechaReserva == null) {
-                    mostrarMensaje("Seleccione una fecha.");
-                    return;
-                }
-
-                java.sql.Time horaReserva = new java.sql.Time(((Date) horaSpinner.getValue()).getTime());
-
-                // Obtener duración y cantidad
-                int duracionReserva = (int) duracionSpinner.getValue();
-
-                // Obtener productos de la tabla pedidosTable
-                ArrayList<Producto> productos = controladorRR.obtenerProductosDeTabla();
-
-                // Llamar al método en el controlador
-                controladorRR.realizarPedidoYReserva(idCliente, idMesa, productos, (java.sql.Date) fechaReserva, horaReserva, duracionReserva);
-
-
-            } catch (Exception ex) {
-                mostrarMensaje("Error al procesar la reserva: " + ex.getMessage());
-            }
-                
             }
         });
 
 
-        
+
+
     }
+   
+    double calcularTotal() {
+        double total = 0.00;
+        double igv = 0.00;
+        double subTotal = 0.00;
+
+        // Iterar a través de las filas del modelo de tabla
+        for (int i = 0; i < pedidosTableModel.getRowCount(); i++) {
+            // Obtener el valor de la columna "Total" (índice 5)
+            Object value = pedidosTableModel.getValueAt(i, 5);
+
+            // Asegurarse de que el valor no sea nulo y sea convertible a double
+            if (value != null) {
+                try {
+                    total += Double.parseDouble(value.toString());
+                    subTotal = total/1.18;
+                    igv = total - subTotal;
+                    totalField.setText(String.valueOf(total));
+                    igvField.setText(String.format("%.2f", igv));
+                    subtotalField.setText(String.format("%.2f", subTotal));
+                } catch (NumberFormatException e) {
+                    // Manejar el caso de formato incorrecto
+                    System.err.println("Valor inválido en la columna Total: " + value);
+                }
+            }
+        }
+
+        return total;
+    }
+   
+    
+
 
     public void setControladorH(cHome controladorH){
         this.controladorH = controladorH;
@@ -309,9 +418,12 @@ public class vistaRegReserva extends JFrame {
      * @param clientes Lista de clientes a mostrar en el JComboBox.
      */
     public void mostrarClientesEnComboBox(ArrayList<Cliente> clientes) {
-        comboBoxClientes.removeAllItems(); // Limpiar el JComboBox
-        for (Cliente c : clientes) {
-            comboBoxClientes.addItem(c);
+        if(usuarioAutenticado.getRol().equals("Empleado")){
+            comboBoxClientes.removeAllItems();
+            
+            for (Cliente c : clientes) {
+                comboBoxClientes.addItem(c);
+            }
         }
     }
     
@@ -330,11 +442,11 @@ public class vistaRegReserva extends JFrame {
     * del usuario y los utilice en la interfaz de usuario (por ejemplo, para mostrar
     * el nombre del usuario, su rol, etc.).
     * 
-    * @param usuario El objeto {@link Usuario} que representa al usuario autenticado.
+    * @param usuarioAutenticado El objeto {@link Usuario} que representa al usuario autenticado.
     *                Este parámetro no debe ser {@code null}.
     */
-    public void setUsuario(Usuario usuario) {
-        this.usuarioAutenticado = usuario;
+    public void setUsuario(Usuario usuarioAutenticado) {
+        this.usuarioAutenticado = usuarioAutenticado;
     }
 }
 

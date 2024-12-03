@@ -5,7 +5,6 @@
 package Controlador;
 
 import Modelo.Cliente;
-import Vista.vistaHome;
 import Vista.vistaRegCliente;
 import dao.ClienteDao;
 
@@ -40,12 +39,13 @@ public class cRegCliente {
      * @param email Email del cliente.
      * @param telefono Teléfono del cliente.
      */
-    public void agregarCliente(String nombre, String apellido, String email, String telefono) {
+    public void agregarCliente(String nombre, String apellido, String email, String telefono, String Dni) {
         Cliente cliente = new Cliente();
         cliente.setNombre(nombre);
         cliente.setApellido(apellido);
         cliente.setEmail(email);
         cliente.setTelefono(telefono);
+        cliente.setDni(Dni);
 
         // Intentamos insertar el cliente en la base de datos
         boolean exito = dao.insertarCliente(cliente);
@@ -88,13 +88,14 @@ public class cRegCliente {
      * @param email Nuevo email del cliente.
      * @param telefono Nuevo teléfono del cliente.
      */
-    public void actualizarCliente(int id, String nombre, String apellido, String email, String telefono) {
+    public void actualizarCliente(int id, String nombre, String apellido, String email, String telefono, String dni) {
         Cliente cliente = new Cliente();
         cliente.setIdCliente(id);
         cliente.setNombre(nombre);
         cliente.setApellido(apellido);
         cliente.setEmail(email);
         cliente.setTelefono(telefono);
+        cliente.setDni(dni);
 
         // Intentamos actualizar el cliente en la base de datos desde dao
         boolean exito = dao.actualizarCliente(cliente);

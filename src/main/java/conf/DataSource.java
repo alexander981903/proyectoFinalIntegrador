@@ -17,7 +17,7 @@ import java.sql.SQLException;
 public class DataSource {
 
     // URL de conexión a la base de datos
-    private static final String URL = "jdbc:mysql://localhost:3306/restaurante";
+    private static final String URL = "jdbc:mysql://localhost:3306/restaurante2";
     
     // Usuario para la conexión a la base de datos
     private static final String USUARIO = "root";

@@ -132,15 +132,25 @@ public class vistaRegPedido extends JFrame {
         btnMas.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Leer el valor actual de txtCantidad, convertirlo a un número
-                int cantidad = Integer.parseInt(txtCantidad.getText());
+                try {
+                    // Leer el valor actual de txtCantidad y convertirlo a un número
+                    int cantidad = Integer.parseInt(txtCantidad.getText());
+                    Producto p = controladorRegPed.getProductoID();
+                    // Incrementar la cantidad solo si no sobrepasa el stock
+                    if (cantidad < p.getStock()) {
+                        cantidad++;
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Solo queda "+p.getStock() +" disponible.");
+                    }
 
-                // Incrementar la cantidad
-                cantidad++;
-
-                // Actualizar el campo de texto con el nuevo valor
-                txtCantidad.setText(String.valueOf(cantidad));
+                    // Actualizar el campo de texto con el nuevo valor
+                    txtCantidad.setText(String.valueOf(cantidad));
+                } catch (NumberFormatException ex) {
+                    // En caso de que el campo de texto no contenga un número, restablecer a cero
+                    txtCantidad.setText("0");
+                }
             }
+            
         });
         
         btnMenos.addActionListener(new ActionListener() {
@@ -183,6 +193,7 @@ public class vistaRegPedido extends JFrame {
                 
                 if(vistaRegR != null && vistaRegR.isVisible()){
                     vistaRegR.agregarProductoAlaTabla(producto);
+                    vistaRegR.calcularTotal();
                 }
                 dispose();
             }

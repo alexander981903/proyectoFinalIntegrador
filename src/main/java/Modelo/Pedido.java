@@ -4,6 +4,7 @@
  */
 package Modelo;
 
+import java.sql.Date;
 import java.util.ArrayList;
 
 /**
@@ -15,9 +16,10 @@ import java.util.ArrayList;
 public class Pedido {
     
     private int idPedido;
-    private String fechaPedido;
+    private Date fechaPedido;
     private String estado;
     private Cliente cliente;
+    private double total;
     private ArrayList<Producto> producto;
 
     /**
@@ -33,13 +35,15 @@ public class Pedido {
      * @param estado El estado del pedido.
      * @param cliente El cliente que realizó el pedido.
      * @param producto La lista de productos asociados al pedido.
+     * @param total
      */
-    public Pedido(int idPedido, String fechaPedido, String estado, Cliente cliente, ArrayList<Producto> producto) {
+    public Pedido(int idPedido, Date fechaPedido, String estado, Cliente cliente, ArrayList<Producto> producto, double total) {
         this.idPedido = idPedido;
         this.fechaPedido = fechaPedido;
         this.estado = estado;
         this.cliente = cliente;
         this.producto = producto;
+        this.total = total;
     }
 
     /**
@@ -62,7 +66,7 @@ public class Pedido {
      * Obtiene la fecha en que se realizó el pedido.
      * @return La fecha del pedido.
      */
-    public String getFechaPedido() {
+    public Date getFechaPedido() {
         return fechaPedido;
     }
 
@@ -70,7 +74,7 @@ public class Pedido {
      * Establece la fecha en que se realizó el pedido.
      * @param fechaPedido La fecha a asignar al pedido.
      */
-    public void setFechaPedido(String fechaPedido) {
+    public void setFechaPedido(Date fechaPedido) {
         this.fechaPedido = fechaPedido;
     }
 
@@ -121,4 +125,14 @@ public class Pedido {
     public void setProducto(ArrayList<Producto> producto) {
         this.producto = producto;
     }
+
+    public double getTotal() {
+        return total;
+    }
+
+    public void setTotal(double total) {
+        this.total = total;
+    }
+    
+    
 }

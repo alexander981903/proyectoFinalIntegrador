@@ -133,5 +133,37 @@ public class ProductoDao {
        }
        return null; // Retorna null si no se encuentra el producto o hay un error
    }
+   
+   /**
+    * Actualiza los datos de un producto en la base de datos según su ID.
+    *
+    * @param idProducto El ID del producto a actualizar.
+    * @param nombre El nuevo nombre del producto.
+    * @param precioPersonal El nuevo precio personal del producto.
+    * @param precioFamiliar El nuevo precio familiar del producto.
+    * @param disponibilidad La nueva disponibilidad del producto.
+    * @param stock El nuevo stock del producto.
+    * @return true si la actualización fue exitosa, false si hubo un error.
+    */
+    public boolean actualizarProductoPorId(int idProducto, String nombre, double precioPersonal, 
+            double precioFamiliar, boolean disponibilidad, int stock) {
+        String sql = "UPDATE producto SET nombrePlato = ?, precio_personal = ?, precio_familiar = ?, disponibilidad = ?, stock = ? WHERE idProducto = ?";
+        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+            ps.setString(1, nombre);
+            ps.setDouble(2, precioPersonal);
+            ps.setDouble(3, precioFamiliar);
+            ps.setBoolean(4, disponibilidad);
+            ps.setInt(5, stock);
+            ps.setInt(6, idProducto);
+
+            int filasActualizadas = ps.executeUpdate();
+            return filasActualizadas > 0;
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar el producto: " + e.getMessage());
+            return false;
+        }
+    }
+
+
 
 }

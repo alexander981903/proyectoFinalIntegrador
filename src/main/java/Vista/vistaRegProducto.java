@@ -30,6 +30,7 @@ public class vistaRegProducto extends JFrame {
     private JButton modificarButton;
     private JButton cancelarButton;
     
+    private int idPlato;
     private boolean disponibilidad = false; // Por defecto en false
     
     // Color personalizado
@@ -82,6 +83,7 @@ public class vistaRegProducto extends JFrame {
         
         registrarButton = new JButton("Registrar");
         modificarButton = new JButton("Modificar");
+        modificarButton.setVisible(false);
         cancelarButton = new JButton("Cancelar");
 
         // Configuración de colores de los botones
@@ -115,8 +117,69 @@ public class vistaRegProducto extends JFrame {
                 }
             }
         });
-    }
+        
+        modificarButton.addActionListener(new ActionListener() {
+            private boolean enModoEdicion = false; // Variable para controlar el estado de edición
 
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!enModoEdicion) {
+                    // Preguntar si se desea entrar en modo de edición
+                    int respuesta = JOptionPane.showConfirmDialog(
+                        null,
+                        "¿Estás seguro de que deseas modificar este producto?",
+                        "Confirmación de Modificación",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE
+                    );
+
+                    if (respuesta == JOptionPane.YES_OPTION) {
+                        // Activar los campos para edición
+                        activarCampos(true);
+                        modificarButton.setText("Guardar Cambios"); // Cambiar el texto del botón
+                        enModoEdicion = true;
+                    }
+                } else {
+                    try {
+                        // Recuperar los valores y actualizar después de la confirmación
+                        String nombrePlato = nombrePlatoField.getText();
+                        double precio_Personal = Double.parseDouble(precioPersonalField.getText());
+                        double precio_Familiar = Double.parseDouble(precioFamiliarField.getText());
+                        int stock = Integer.parseInt(stockField.getText());
+
+                        controlerRP.actualizarProducto(idPlato, nombrePlato, precio_Personal, precio_Familiar, disponibilidad, stock);
+                        controladorH.cargarProductos();
+                        mostrarMensaje("El producto se ha actualizado correctamente.");
+                        dispose(); // Cierra la ventana
+
+                    } catch (NumberFormatException ex) {
+                        mostrarMensaje("Por favor, ingresa valores numéricos válidos para los precios y el stock.");
+                    }
+                }
+            }
+
+            
+        });
+
+        
+        
+        cancelarButton.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+            }
+
+        });
+    }
+    
+    // Método para habilitar o deshabilitar los campos
+    public void activarCampos(boolean habilitar) {
+        nombrePlatoField.setEditable(habilitar);
+        precioPersonalField.setEditable(habilitar);
+        precioFamiliarField.setEditable(habilitar);
+        stockField.setEditable(habilitar);
+    }
+    
     private void configurarBotonColor(JButton boton) {
         boton.setBackground(buttonBackgroundColor);
         boton.setForeground(textColor);
@@ -129,6 +192,8 @@ public class vistaRegProducto extends JFrame {
     public void setControlerRP (cRegProducto controlerRP){
         this.controlerRP = controlerRP;
     }
+    
+    
     
     /**
      * Método para mostrar mensajes al usuario.
@@ -149,4 +214,40 @@ public class vistaRegProducto extends JFrame {
     public void setControladorH(cHome controladorH) {
         this.controladorH = controladorH;
     }
+
+    public void setIdPlato(int idPlato) {
+        this.idPlato = idPlato;
+    }
+
+    public int getIdPlato() {
+        return idPlato;
+    }
+
+    public JTextField getNombrePlatoField() {
+        return nombrePlatoField;
+    }
+
+    public JTextField getPrecioPersonalField() {
+        return precioPersonalField;
+    }
+
+    public JTextField getPrecioFamiliarField() {
+        return precioFamiliarField;
+    }
+
+    public JTextField getStockField() {
+        return stockField;
+    }
+
+    public JButton getRegistrarButton() {
+        return registrarButton;
+    }
+
+    public JButton getModificarButton() {
+        return modificarButton;
+    }
+    
+    
+    
+    
 }  

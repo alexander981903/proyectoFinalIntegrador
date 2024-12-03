@@ -4,15 +4,12 @@
  */
 package Controlador;
 
-
 import Modelo.Cliente;
 import Modelo.Empleado;
 import Modelo.Usuario;
 import Vista.vistaRegUsuario;
-import dao.ClienteDao;
-import dao.EmpleadoDao;
 import dao.UsuarioDao;
-import java.util.ArrayList;
+import javax.swing.JOptionPane;
 
 /**
  * Clase Controlador que maneja las interacciones entre la Vista y el Modelo para los Usuarios.
@@ -22,10 +19,8 @@ import java.util.ArrayList;
  * @author EMMANUEL
  */
 public class cUsuario {
-    private vistaRegUsuario vistaU;  // Vista para registrar el usuario
-    private UsuarioDao daoU;         // DAO para interactuar con los datos de Usuario
-    private EmpleadoDao daoE;        // DAO para interactuar con los datos de Empleado
-    private ClienteDao daoC;         // DAO para interactuar con los datos de Cliente
+    private vistaRegUsuario vistaU;
+    private UsuarioDao daoU;
     
     /**
      * Constructor que inicializa el controlador con la vista de usuario y los DAOs de Usuario, Empleado y Cliente.
@@ -35,54 +30,52 @@ public class cUsuario {
      */
     public cUsuario(vistaRegUsuario vistaU) {
         this.vistaU = vistaU;
-        this.daoU = new UsuarioDao();  // Inicializamos el DAO de Usuario
-        this.daoE = new EmpleadoDao(); // Inicializamos el DAO de Empleado
-        this.daoC = new ClienteDao();  // Inicializamos el DAO de Cliente
-        this.vistaU.setControlerU(this); // Asociamos el controlador a la vista
+        this.daoU = new UsuarioDao();  
+        this.vistaU.setControlerU(this);
+        //existeAdministrador();
     }
 
-    /**
-     * Método para cargar todos los empleados en el ComboBox de la vista de registro de usuario.
-     * Recupera todos los empleados de la base de datos a través del DAO de Empleado
-     * y los muestra en el ComboBox correspondiente en la vista.
-     */
-    public void cargarComboboxEmpleados() {
-        // Obtenemos todos los empleados desde la base de datos
-        ArrayList<Empleado> empleados = daoE.obtenerTodosEmpleados();
-        // Mostramos los empleados en el ComboBox de la vista
-        vistaU.mostrarEmpleadosEnComboBox(empleados);
-    }
+
 
     /**
-     * Método para cargar todos los clientes en el ComboBox de la vista de registro de usuario.
-     * Recupera todos los clientes de la base de datos a través del DAO de Cliente
-     * y los muestra en el ComboBox correspondiente en la vista.
-     */
-    public void cargarComboboxClientes() {
-        // Obtenemos todos los clientes desde la base de datos
-        ArrayList<Cliente> clientes = daoC.obtenerTodosClientes();
-        // Mostramos los clientes en el ComboBox de la vista
-        vistaU.mostrarClientesEnComboBox(clientes);
-    }
-
-    /**
-     * Método para agregar un nuevo usuario.
-     * Este método recibe los datos del usuario (login, clave, rol, objeto asociado) 
+     * Método para agregar un nuevo usuario.Este método recibe los datos del usuario 
      * y los guarda en la base de datos utilizando el DAO de Usuario.
      * 
      * @param login El nombre de usuario para el login.
      * @param clave La clave o contraseña asociada al usuario.
      * @param rol El rol que se asignará al usuario (Empleado o Cliente).
-     * @param obj El objeto asociado al usuario, que puede ser un empleado o un cliente dependiendo del rol.
+     * @param dni
+     * @param nombre
+     * @param apellido
+     * @param email
+     * @param telefono
      */
-    public void agregarUsuario(String login, String clave, String rol, Object obj) {
-        Usuario user = new Usuario();
-        user.setLogin(login);  // Establece el login del usuario
-        user.setClave(clave);  // Establece la clave del usuario
-        user.setRol(rol);      // Establece el rol del usuario (Empleado o Cliente)
-        user.setObj(obj);      // Establece el objeto relacionado (Empleado o Cliente)
+    public void agregarUsuario(String login, String clave, String rol, String dni,String nombre ,String apellido, String email, String telefono,  
+            String nombreEmp , String Cargo , String Turno) {
         
-        // Intentamos agregar el usuario utilizando el DAO
+        
+        Cliente cliente = new Cliente();
+        cliente.setDni(dni);
+        cliente.setNombre(nombre);
+        cliente.setApellido(apellido);
+        cliente.setEmail(email);
+        cliente.setTelefono(telefono);
+        
+        Empleado emp = new Empleado();
+        emp.setNombreEmp(nombreEmp);
+        emp.setCargo(Cargo);
+        emp.setTurno(Turno);
+
+        Usuario user = new Usuario();
+        user.setLogin(login);  
+        user.setClave(clave);
+        user.setRol(rol);
+        if (!nombreEmp.isEmpty() && !Cargo.isEmpty() && !Turno.isEmpty()) {
+            user.setObj(emp);
+        } else {
+            user.setObj(cliente);
+        }
+        
         boolean exito = daoU.insertarUsuario(user);
         if (exito) {
             vistaU.mostrarMensaje("Usuario agregado exitosamente.");
@@ -90,4 +83,17 @@ public class cUsuario {
             vistaU.mostrarMensaje("Error al agregar el usuario.");
         }
     }
+    
+    public boolean existeAdministrador() {
+        boolean existeAdmin = daoU.existeAdmin();
+        if (!existeAdmin) {
+            int respuesta = JOptionPane.showConfirmDialog(null, 
+                    "No hay un administrador registrado. ¿Desea registrar uno ahora?", 
+                    "Registrar Administrador", JOptionPane.YES_NO_OPTION);
+            return respuesta == JOptionPane.YES_OPTION;
+        }            
+        return false;
+    }
+
+
 }

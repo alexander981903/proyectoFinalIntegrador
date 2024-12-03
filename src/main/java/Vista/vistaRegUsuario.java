@@ -4,24 +4,9 @@
  */
 package Vista;
 
-/**
- * La clase vistaRegUsuario representa una ventana de interfaz gráfica para registrar usuarios en el sistema.
- * 
- * Esta ventana permite gestionar la creación de un nuevo usuario con un rol asignado y vincularlo con un empleado
- * o cliente existente.
- * 
- * @author EMMANUEL
- */
-
 import Controlador.*;
-import Modelo.Cliente;
-import Modelo.Empleado;
-
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
 
 public class vistaRegUsuario extends JFrame {
     // Colores personalizados
@@ -29,297 +14,253 @@ public class vistaRegUsuario extends JFrame {
     private final Color buttonColor = new Color(0x2A, 0x44, 0x63); // Botón color #2a4463
     private final Color textColor = Color.WHITE; // Color del texto
 
-    // Componentes de la interfaz
-    private JTextField loginField;
+    private JTextField loginField, dniField, nombreField, apellidoField, emailField, telefonoField;
+    private JTextField nombreEmpField,cargoField,turnoField;
+    private JLabel dni,Nombre,Apellido,email,telefono;
+    private JLabel lblNombreEmp,lblCargo,lblTurno;
+    private JPanel rightPanel;
     private JPasswordField claveField;
-    private JComboBox<String> rolComboBox;
-    private JComboBox<Object> idComboBox; 
     private JButton registroButton;
-    private JButton nuevoEmpleadoButton;
-    private JButton nuevoClienteButton;
-    
-    private cHome controladorH;
+    private String rol;
+
     private cUsuario controladorU;
-    private vistaHome vistaH;
-    
+
     /**
      * Constructor de la clase vistaRegUsuario.
-     * Inicializa los componentes de la ventana y configura la visibilidad de los botones para crear nuevos empleados y clientes.
+     * Inicializa los componentes de la ventana.
      */
-    public vistaRegUsuario() {
-        initComponents();
+    public vistaRegUsuario(JFrame vistaLogin){
+        setTitle("Registro de Usuario");
+        setSize(700, 500);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        this.addWindowListener(new java.awt.event.WindowAdapter() {
+        setLocationRelativeTo(null); // Centrar la ventana
+        setLayout(new BorderLayout()); // Usamos BorderLayout para organizar los paneles
+        getContentPane().setBackground(backgroundColor); // Fondo personalizado
+        initComponents();
+        
+        addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
-            public void windowClosed(java.awt.event.WindowEvent e) {
-                // Crear e iniciar vistaLogin cuando vistaRegUsuario se cierra
-                vistaLogin login = new vistaLogin();
-                login.setVisible(true);
-                new cLogin(login);
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                vistaLogin.setVisible(true);
             }
         });
+    }
+    
+    
+    private void initComponents() {
         
-        nuevoEmpleadoButton.setVisible(false);
-        nuevoClienteButton.setVisible(false);
-    }
-    
-    /**
-     * Método para inicializar los componentes de la ventana.
-     * Configura el layout, los componentes de la interfaz y la visibilidad de los botones.
-     */
-    public void initComponents(){
-    // Configuración de la ventana
-    setTitle("Registro de Usuario");
-    setSize(500, 400);
-    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    setLocationRelativeTo(null); // Centrar la ventana
-    setLayout(new BorderLayout()); // Usamos BorderLayout para organizar los paneles
-    getContentPane().setBackground(backgroundColor); // Fondo personalizado
+        controladorU = new cUsuario(this);
+        
 
-    // Panel superior para loginField y claveField
-    JPanel panelSuperior = new JPanel(new GridBagLayout());
-    panelSuperior.setBackground(backgroundColor);
-    GridBagConstraints gbcSuperior = new GridBagConstraints();
-    gbcSuperior.insets = new Insets(10, 10, 10, 10); // Espaciado entre los elementos
+        // Panel principal que divide en dos secciones: izquierda (imagen) y derecha (formulario)
+        JPanel mainPanel = new JPanel(new GridLayout(1, 2));
+        mainPanel.setBackground(backgroundColor);
+        mainPanel.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, Color.WHITE)); // Línea divisoria vertical
 
-    // Crear un JLabel grande para el título "Crea una cuenta"
-    JLabel tituloLabel = new JLabel("Crea una cuenta");
-    tituloLabel.setForeground(textColor); // Color de texto personalizado
-    tituloLabel.setFont(new Font("Arial", Font.BOLD, 24)); // Fuente y tamaño del título
+        // Panel izquierdo para la imagen
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.setBackground(backgroundColor);
 
-    // Añadir el título al panel superior
-    gbcSuperior.gridx = 0;
-    gbcSuperior.gridy = 0;
-    gbcSuperior.gridwidth = 2; // Ocupa dos columnas para centrar
-    panelSuperior.add(tituloLabel, gbcSuperior);
+        // Agregar una imagen al panel izquierdo
+        String imagePath = "/img/registro.png"; // Cambia la ruta si es necesario
+        ImageIcon originalIcon = new ImageIcon(getClass().getResource(imagePath));
+        Image scaledImage = originalIcon.getImage().getScaledInstance(200,300, Image.SCALE_SMOOTH);
+        JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
+        imageLabel.setHorizontalAlignment(JLabel.CENTER);
+        leftPanel.add(imageLabel, BorderLayout.CENTER);
 
-    // Crear los componentes de login y clave
-    JLabel loginLabel = new JLabel("Login:");
-    loginLabel.setForeground(textColor); // Color de texto personalizado
-    loginField = new JTextField(20);
+        // Panel derecho para los campos del formulario
+        rightPanel = new JPanel(new GridBagLayout());
+        rightPanel.setBackground(backgroundColor);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-    JLabel claveLabel = new JLabel("Clave:");
-    claveLabel.setForeground(textColor); // Color de texto personalizado
-    claveField = new JPasswordField(20);
+        // Título
+        JLabel tituloLabel = new JLabel("Registro de Usuario");
+        tituloLabel.setForeground(textColor);
+        tituloLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        rightPanel.add(tituloLabel, gbc);
 
-    // Añadir componentes de login y clave debajo del título
-    gbcSuperior.gridwidth = 1; // Restablecer a una columna
-    gbcSuperior.gridx = 0;
-    gbcSuperior.gridy = 1;
-    panelSuperior.add(loginLabel, gbcSuperior);
+        // Campos de texto
+        gbc.gridwidth = 1;
+        gbc.gridy++;
+        rightPanel.add(createLabel("Login:"), gbc);
+        loginField = new JTextField(20);
+        gbc.gridx = 1;
+        rightPanel.add(loginField, gbc);
 
-    gbcSuperior.gridx = 1;
-    panelSuperior.add(loginField, gbcSuperior);
-
-    gbcSuperior.gridx = 0;
-    gbcSuperior.gridy = 2;
-    panelSuperior.add(claveLabel, gbcSuperior);
-
-    gbcSuperior.gridx = 1;
-    panelSuperior.add(claveField, gbcSuperior);
-
-    // Panel inferior para rolComboBox, idComboBox y botones
-    JPanel panelInferior = new JPanel(new GridBagLayout());
-    panelInferior.setBackground(backgroundColor);
-    GridBagConstraints gbcInferior = new GridBagConstraints();
-    gbcInferior.insets = new Insets(10, 10, 10, 10); // Espaciado entre los elementos
-
-    // Crear los componentes del panel inferior
-    JLabel rolLabel = new JLabel("Rol:");
-    rolLabel.setForeground(textColor); // Color de texto personalizado
-    String[] roles = {"Empleado", "Cliente"};
-    rolComboBox = new JComboBox<>(roles);
-    rolComboBox.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            // Actualizar el ComboBox de ID según el rol seleccionado
-            actualizarIdComboBox((String) rolComboBox.getSelectedItem());
+        gbc.gridx = 0;
+        gbc.gridy++;
+        rightPanel.add(createLabel("Contraseña:"), gbc);
+        claveField = new JPasswordField(20);
+        gbc.gridx = 1;
+        rightPanel.add(claveField, gbc);
+        
+        
+        boolean esAdmin = controladorU.existeAdministrador();
+        
+        if (esAdmin) {
+            agregarCamposEmpleado(gbc);
+            rol = "Empleado";
+        } else {           
+            agregarCamposCliente(gbc);
+            rol = "Cliente";
         }
-    });
 
-    JLabel idLabel = new JLabel("Empleado/Cliente:");
-    idLabel.setForeground(textColor); // Color de texto personalizado
-    idComboBox = new JComboBox<>(); // Inicialmente vacío
 
-    nuevoEmpleadoButton = new JButton("Nuevo Empleado");
-    nuevoEmpleadoButton.setBackground(buttonColor); // Color del botón
-    nuevoEmpleadoButton.setForeground(textColor); // Color del texto del botón
-    nuevoEmpleadoButton.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            vistaRegEmpleado ventanaEmpleado = new vistaRegEmpleado();
-            ventanaEmpleado.setVisible(true);
-            new cRegEmpleado(ventanaEmpleado);
-            ventanaEmpleado.setControladorH(controladorH);
-        }
-    });
-
-    nuevoClienteButton = new JButton("Nuevo Cliente");
-    nuevoClienteButton.setBackground(buttonColor); // Color del botón
-    nuevoClienteButton.setForeground(textColor); // Color del texto del botón
-    nuevoClienteButton.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            vistaRegCliente ventanaCliente = new vistaRegCliente();
-            ventanaCliente.setVisible(true);
-            new cRegCliente(ventanaCliente);
-            ventanaCliente.setControladorH(controladorH);
-        }
-    });
-
-    registroButton = new JButton("Registrar");
-    registroButton.setBackground(buttonColor); // Color de botón personalizado
-    registroButton.setForeground(textColor); // Color de texto del botón
-    registroButton.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            String login = loginField.getText();
-            char[] claveChar = claveField.getPassword();
-            String clave = new String(claveChar);
-            String rol = (String) rolComboBox.getSelectedItem();
-            Object obj = idComboBox.getSelectedItem();
+        // Botón de registro
+        registroButton = new JButton("Registrar");
+        registroButton.setBackground(buttonColor);
+        registroButton.setForeground(textColor);
+        registroButton.addActionListener(e -> {
+            String login = loginField.getText().trim();
+            String clave = new String(claveField.getPassword()).trim();
             
-            controladorU.agregarUsuario(login, clave, rol, obj);
-        }
-    });
-    
-    idComboBox.setRenderer(new DefaultListCellRenderer() {
-        @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            if (value instanceof Empleado) {
-                Empleado emp = (Empleado) value;
-                setText(emp.getIdEmpleado() + " || " + emp.getNombreEmp() + " || " + emp.getCargo());
-            } else if (value instanceof Cliente) {
-                Cliente cliente = (Cliente) value;
-                setText(cliente.getIdCliente() + " || " + cliente.getNombre() + " || " + cliente.getApellido());
+            String rolUser = rol;
+                        
+            
+            if (rolUser.equals("Empleado")) {
+                
+                String nombreEmp = nombreEmpField.getText();
+                String cargoEmp = cargoField.getText();
+                String turnoEmp = turnoField.getText();
+                // Verificar que los campos del empleado estén completos
+                if (nombreEmp.isEmpty() || cargoEmp.isEmpty() || turnoEmp.isEmpty()) {
+                    mostrarMensaje("Por favor, complete todos los campos de empleado.");
+                    return; // Salir si los campos del empleado no están completos
+                }
+                // Llamada para agregar un usuario con los datos de empleado
+                controladorU.agregarUsuario(login, clave, rolUser, "","","","","",
+                    nombreEmp,cargoEmp,turnoEmp);
+                dispose();
+                vistaLogin ventanaLogin = new vistaLogin();
+                new cLogin(ventanaLogin);
+                ventanaLogin.setVisible(true);
+            } else { 
+                String dni = dniField.getText();
+                String nombre = nombreField.getText();
+                String apellido = apellidoField.getText();
+                String email = emailField.getText();
+                String telefono = telefonoField.getText();
+                // Si es Cliente, usamos los campos del cliente
+                if (dni.isEmpty() || nombre.isEmpty() || apellido.isEmpty() || email.isEmpty() || telefono.isEmpty()) {
+                    mostrarMensaje("Por favor, complete todos los campos de cliente.");
+                    return; // Salir si los campos del cliente no están completos
+                }
+                // Llamada para agregar un usuario con los datos del cliente
+                controladorU.agregarUsuario(login, clave, rolUser, dni,nombre,apellido,email,telefono,
+                    "","","");
+                dispose();
+                vistaLogin ventanaLogin = new vistaLogin();
+                new cLogin(ventanaLogin);
+                ventanaLogin.setVisible(true);
             }
-            return this;
-        }
-    });
+            
+            
+            
+        });
 
 
-    // Añadir componentes al panel inferior
-    gbcInferior.gridx = 0;
-    gbcInferior.gridy = 0;
-    panelInferior.add(rolLabel, gbcInferior);
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.gridwidth = 2;
+        rightPanel.add(registroButton, gbc);
 
-    gbcInferior.gridx = 1;
-    panelInferior.add(rolComboBox, gbcInferior);
+        // Añadir los paneles izquierdo y derecho al panel principal
+        mainPanel.add(leftPanel);
+        mainPanel.add(rightPanel);
 
-    gbcInferior.gridx = 0;
-    gbcInferior.gridy = 1;
-    panelInferior.add(idLabel, gbcInferior);
-
-    gbcInferior.gridx = 1;
-    panelInferior.add(idComboBox, gbcInferior);
-
-    gbcInferior.gridx = 2;
-    panelInferior.add(nuevoEmpleadoButton, gbcInferior);
-
-    gbcInferior.gridx = 3;
-    panelInferior.add(nuevoClienteButton, gbcInferior);
-
-    gbcInferior.gridx = 1;
-    gbcInferior.gridy = 2;
-    panelInferior.add(registroButton, gbcInferior);
-
-    // Añadir paneles superior e inferior a la ventana principal
-    add(panelSuperior, BorderLayout.NORTH);
-    add(panelInferior, BorderLayout.CENTER);
-}
+        
+        add(mainPanel, BorderLayout.CENTER);
+    }
+    
+    
 
 
-    /**
-     * Método para actualizar el JComboBox de IDs según el rol seleccionado (Empleado o Cliente).
-     * Este método limpia el JComboBox y carga los elementos adecuados (empleados o clientes) 
-     * basándose en el rol seleccionado.
-     * 
-     * @param selectedRole El rol seleccionado (Empleado o Cliente).
-     */
-    private void actualizarIdComboBox(String selectedRole) {
-        idComboBox.removeAllItems(); // Limpiar el JComboBox        
-
-        if ("Empleado".equals(selectedRole)) {
-            nuevoEmpleadoButton.setVisible(true);
-            nuevoClienteButton.setVisible(false);
-            // Cargar empleados en el ComboBox
-            controladorU.cargarComboboxEmpleados();
-        } else if ("Cliente".equals(selectedRole)) {
-            nuevoEmpleadoButton.setVisible(false);
-            nuevoClienteButton.setVisible(true);
-            // Cargar clientes en el ComboBox
-            controladorU.cargarComboboxClientes();
-        }
+    // Método para crear etiquetas con estilo personalizado
+    private JLabel createLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setForeground(textColor);
+        return label;
     }
 
-    /**
-     * Método para mostrar una lista de empleados en el JComboBox.
-     * Este método limpia el JComboBox y agrega los empleados recibidos como parámetros.
-     * 
-     * @param empleados Lista de empleados a mostrar en el JComboBox.
-     */
-    public void mostrarEmpleadosEnComboBox(ArrayList<Empleado> empleados) {
-        idComboBox.removeAllItems(); // Limpiar el JComboBox
-        for (Empleado emp : empleados) {
-            idComboBox.addItem(emp);
-        }
-    }
-
-    /**
-     * Método para mostrar una lista de clientes en el JComboBox.
-     * Este método limpia el JComboBox y agrega los clientes recibidos como parámetros.
-     * 
-     * @param clientes Lista de clientes a mostrar en el JComboBox.
-     */
-    public void mostrarClientesEnComboBox(ArrayList<Cliente> clientes) {
-        idComboBox.removeAllItems(); // Limpiar el JComboBox
-        for (Cliente c : clientes) {
-            idComboBox.addItem(c);
-        }
-    }
-
-    /**
-     * Método para mostrar mensajes al usuario.
-     * 
-     * @param mensaje El mensaje a mostrar en el cuadro de diálogo.
-     */
     public void mostrarMensaje(String mensaje) {
         JOptionPane.showMessageDialog(this, mensaje);
     }
 
-    /**
-     * Método para establecer el controlador de usuarios.
-     * 
-     * @param controladorU Objeto de tipo cUsuario, el controlador de usuarios.
-     */
-    public void setControlerU(cUsuario controladorU){
+    public void setControlerU(cUsuario controladorU) {
         this.controladorU = controladorU;
     }
     
-    public void setControlerH(cHome controladorH){
-        this.controladorH = controladorH;
+    public void visibleCampos(boolean habilitar){
+        
     }
     
-    // Método para establecer vistaHome
-    public void setVistaHome(vistaHome vistaH) {
-        this.vistaH = vistaH;
+    private void agregarCamposEmpleado(GridBagConstraints gbc) {
+        gbc.gridx = 0;
+        gbc.gridy++;
+        rightPanel.add(createLabel("Nombre:"), gbc);
+        nombreEmpField = new JTextField(20);
+        gbc.gridx = 1;
+        rightPanel.add(nombreEmpField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        rightPanel.add(createLabel("Cargo:"), gbc);
+        cargoField = new JTextField(20);
+        gbc.gridx = 1;
+        rightPanel.add(cargoField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        rightPanel.add(createLabel("Turno:"), gbc);
+        turnoField = new JTextField(20);
+        gbc.gridx = 1;
+        rightPanel.add(turnoField, gbc);
+    }
+    
+    private void agregarCamposCliente(GridBagConstraints gbc) {
+        gbc.gridx = 0;
+        gbc.gridy++;
+        rightPanel.add(createLabel("DNI:"), gbc);
+        dniField = new JTextField(20);
+        gbc.gridx = 1;
+        rightPanel.add(dniField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        rightPanel.add(createLabel("Nombre:"), gbc);
+        nombreField = new JTextField(20);
+        gbc.gridx = 1;
+        rightPanel.add(nombreField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        rightPanel.add(createLabel("Apellido:"), gbc);
+        apellidoField = new JTextField(20);
+        gbc.gridx = 1;
+        rightPanel.add(apellidoField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        rightPanel.add(createLabel("Email:"), gbc);
+        emailField = new JTextField(20);
+        gbc.gridx = 1;
+        rightPanel.add(emailField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        rightPanel.add(createLabel("Teléfono:"), gbc);
+        telefonoField = new JTextField(20);
+        gbc.gridx = 1;
+        rightPanel.add(telefonoField, gbc);
     }
 
-    // Método para mostrar clientes en vistaHome desde vistaLogin
-    public void mostrarClientesEnVistaHome(ArrayList<Cliente> clientes) {
-        if (vistaH != null) {
-            vistaH.mostrarClientes(clientes);  // Llamar a mostrarClientes en vistaHome
-        }
-    }
-    
-    // Método para mostrar clientes en vistaHome desde vistaLogin
-    public void mostrarEmpleadosEnVistaHome(ArrayList<Empleado> empleados) {
-        
-        if (vistaH != null) {
-            vistaH.mostrarEmpleados(empleados);  // Llamar a mostrarClientes en vistaHome
-        }
-    }
 
 }
+
 

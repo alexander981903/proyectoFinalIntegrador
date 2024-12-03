@@ -21,6 +21,10 @@ import javax.swing.table.DefaultTableModel;
 import RenderingTable.ButtonRendererEditor;
 import RenderingTable.CheckboxRendererEditor;
 import RenderingTable.DecimalFormatRenderer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableColumn;
@@ -30,6 +34,7 @@ public class vistaHome extends JFrame {
     
     private cRegEmpleado controladorE;
     private cRegCliente controladorRC;
+    private cRegProducto controladorP;
     private cConfig controladorConf;
     private Usuario usuarioAutenticado;
     private JTabbedPane tabbedPane;
@@ -54,6 +59,7 @@ public class vistaHome extends JFrame {
     private JPanel searchPanel1;
     
     private JLabel companyNameLabel;
+    private JLabel dateTimeLabel;
     
     private JButton searchButton;
     private JButton newClientButton;
@@ -87,16 +93,15 @@ public class vistaHome extends JFrame {
    * Constructor que inicializa la interfaz gráfica de la vista principal.
    */
     public vistaHome(Usuario usuarioAutenticado) {
-        // Configuración de la ventana principal
+        this.usuarioAutenticado = usuarioAutenticado;
         setTitle("Home");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(800, 600);
         setLocationRelativeTo(null);
-
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setResizable(false);
         // Configuración del layout principal
         setLayout(new BorderLayout());
-        initComponents();
-        
+        initComponents();        
     }
     
     /**
@@ -104,24 +109,30 @@ public class vistaHome extends JFrame {
      * Incluye la creación de paneles, botones, tablas, y pestañas.
      */
     private void initComponents() {
-        // Panel superior para logo y nombre de la empresa
         topPanel = new JPanel();
         topPanel.setBackground(backgroundColor);
-        topPanel.setLayout(new FlowLayout(FlowLayout.LEFT)); // Alineación a la izquierda
+        topPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        
+        String imagePath ="/img/logoEmpresa.png";
+        ImageIcon logoIcon = new ImageIcon(getClass().getResource(imagePath));
+        Image image = logoIcon.getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH);
+        JLabel logoLabel = new JLabel(new ImageIcon(image));
+        logoLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        topPanel.add(logoLabel,BorderLayout.CENTER);
 
         // Agregar el nombre de la empresa
-        companyNameLabel = new JLabel("Nombre de la Empresa");
+        companyNameLabel = new JLabel("Cevicheria El Veridico");
         companyNameLabel.setForeground(textColor);
-        companyNameLabel.setFont(new Font("Arial", Font.BOLD, 24)); // Ajusta el tamaño de la fuente
+        companyNameLabel.setFont(new Font("Arial", Font.BOLD, 32));
         topPanel.add(companyNameLabel);
         
         // Panel izquierdo con scroll y botones
         leftPanel = new JPanel();
-        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS)); // Layout vertical para botones
-        leftPanel.setBackground(backgroundColor); // Fondo del panel izquierdo
+        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
+        leftPanel.setBackground(backgroundColor);
         scrollPane = new JScrollPane(leftPanel);
-        scrollPane.setBackground(backgroundColor); // Fondo del scroll pane
-        scrollPane.getViewport().setBackground(backgroundColor); // Fondo del área de visualización del scroll
+        scrollPane.setBackground(backgroundColor);
+        scrollPane.getViewport().setBackground(backgroundColor);
 
         // Crear botones con nombres específicos y ajustar al ancho del panel izquierdo
         String[] buttonNames = {"Reserva", "Clientes", "Empleados","Carta", "Reportes", "Configuración"};
@@ -136,14 +147,14 @@ public class vistaHome extends JFrame {
         reservaPanel = new JPanel();
         reservaPanel.setLayout(new BorderLayout()); // Usar un layout de BorderLayout
         
-        // Panel superior para la búsqueda y el botón de reserva
+        // Panel superior 
         topPanelReserva = new JPanel();
         topPanelReserva.setLayout(new BorderLayout()); // Alinear a la izquierda
         topPanelReserva.setBackground(backgroundColor); // Color de fondo del panel superior
         
         // Campo de búsqueda de pedidos
         searchReserva = new JTextField(20); // Campo de búsqueda con ancho de 20 columnas
-        searchReserva.setText("Buscar pedidos...");
+        searchReserva.setText("Buscar reservas...");
         searchReserva.setForeground(Color.GRAY); // Color de texto de búsqueda
         
         // Botón de reserva de mesa
@@ -163,34 +174,50 @@ public class vistaHome extends JFrame {
         leftScrollPanel = new JPanel();
         leftScrollPanel.setLayout(new BoxLayout(leftScrollPanel, BoxLayout.Y_AXIS));
         leftScrollPanel.setBackground(backgroundColor);
-        
-        
-        // Crear un modelo de tabla para mostrar la información
-        reservasTableModel = new DefaultTableModel(new Object[]{"Comfirmar", "Cliente", "Fecha", "Total"}, 0);
-        //Crea la tabla reservas
+
+        // Crear el modelo de tabla
+        reservasTableModel = new DefaultTableModel(new Object[]{
+            "Confirmar", "ID", "Cliente", "Estado Reserva", "Fecha Reserva", "Hora Reserva", "Estado Mesa", "Estado Pedido"
+        }, 0);
+
+        // Crear la tabla y establecer el modelo
         reservasTable = new JTable(reservasTableModel);
-        
-        // Configurar el renderizador y editor de la primera columna para ser un botón
-        reservasTable.getColumnModel().getColumn(0).setCellRenderer(new ButtonRendererEditor(reservasTable));
-        reservasTable.getColumnModel().getColumn(0).setCellEditor(new ButtonRendererEditor(reservasTable));
-        
+        ButtonRendererEditor rendererEditor = new ButtonRendererEditor(reservasTable, this);
+
+        // Configurar el renderer y editor para el botón
+        reservasTable.getColumnModel().getColumn(0).setCellRenderer(rendererEditor);
+        reservasTable.getColumnModel().getColumn(0).setCellEditor(rendererEditor);
+
+        // Ocultar la columna de ID
+        reservasTable.getColumnModel().getColumn(1).setMaxWidth(0);
+        reservasTable.getColumnModel().getColumn(1).setMinWidth(0);
+        reservasTable.getColumnModel().getColumn(1).setPreferredWidth(0);
+        reservasTable.getColumnModel().getColumn(1).setResizable(false);
+
+        // Ajustar los anchos de columnas
+        reservasTable.getColumnModel().getColumn(2).setPreferredWidth(200);
+        reservasTable.getColumnModel().getColumn(3).setPreferredWidth(100);
+        reservasTable.getColumnModel().getColumn(4).setPreferredWidth(100);
+        reservasTable.getColumnModel().getColumn(5).setPreferredWidth(100);
+        reservasTable.getColumnModel().getColumn(6).setPreferredWidth(100);
+        reservasTable.getColumnModel().getColumn(7).setPreferredWidth(100);
+
         reservasTable.setBackground(backgroundColor);
         reservasTable.setForeground(textColor);
-        reservasTable.setFillsViewportHeight(true); // Hacer que la tabla llene el espacio disponible
+        reservasTable.setFillsViewportHeight(true);
+        reservasTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        reservasTable.setPreferredScrollableViewportSize(new Dimension(500, 600));
 
-        // Agregar algunos datos de ejemplo a la tabla
-        reservasTableModel.addRow(new Object[]{"", "Cliente A", "2024-11-13", "$50"});
-        reservasTableModel.addRow(new Object[]{"", "Cliente B", "2024-11-13", "$35"});
 
-        // Crear un JScrollPane para la tabla y añadirla al panel izquierdo
+        // Añadir la tabla a un JScrollPane
         JScrollPane reservasTableScrollPane = new JScrollPane(reservasTable);
+        reservasTableScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         leftScrollPanel.add(reservasTableScrollPane);
-
-        // Crear el JScrollPane general para el panel izquierdo
+        
         reservaScrollPane = new JScrollPane(leftScrollPanel);
-        reservaScrollPane.setPreferredSize(new Dimension(400, 500)); // Ajustar el tamaño del scroll
-        reservaPanel.add(reservaScrollPane, BorderLayout.WEST); // Añadir al lado izquierdo
-
+        reservaScrollPane.setPreferredSize(new Dimension(600, 600));
+        reservaPanel.add(reservaScrollPane, BorderLayout.WEST);
+        
         // Panel derecho del primer tab (nombres de mesas)
         rightTablePanel = new JPanel();
         rightTablePanel.setLayout(new GridLayout(0, 4)); // 4 columnas para las mesas
@@ -230,11 +257,11 @@ public class vistaHome extends JFrame {
         // Añadir el panel de búsqueda al panel de clientes
         clientesPanel.add(searchPanel, BorderLayout.NORTH);
 
-        mTablaCliente = new DefaultTableModel(new Object[]{"ID Cliente", "Nombre", "Apellido", "Email", "Teléfono"}, 0);
+        mTablaCliente = new DefaultTableModel(new Object[]{"ID Cliente", "Nombre", "Apellido", "Email", "Teléfono","DNI"}, 0);
         clientsTable = new JTable(mTablaCliente);
         clientsTable.setBackground(backgroundColor);
         clientsTable.setForeground(textColor);
-        clientsTable.setFillsViewportHeight(true); // Hacer que la tabla llene el espacio disponible
+        clientsTable.setFillsViewportHeight(true); 
 
 
         // Crear un JScrollPane para la tabla
@@ -356,59 +383,51 @@ public class vistaHome extends JFrame {
         //pestañas para otros botones
         reportesPanel = new JPanel();
         reportesPanel.setBackground(backgroundColor);
-        reportesPanel.add(new JLabel("Panel de Reportes")); // Se puede personalizar el contenido
+        reportesPanel.add(new JLabel("Panel de Reportes"));
         tabbedPane.addTab("Reportes", reportesPanel);
 
         configuracionPanel = new JPanel();
         configuracionPanel.setBackground(backgroundColor);
-        configuracionPanel.add(new JLabel("Panel de Configuración")); // Se puede personalizar el contenido
+        configuracionPanel.add(new JLabel("Panel de Configuración"));
         
-        // Crear panel para los campos
-        JPanel camposPanel = new JPanel(new GridLayout(7, 2, 10, 10));
-        camposPanel.setBackground(backgroundColor);
+        JPanel panelSuperior = new JPanel(new GridLayout(2, 2, 10, 10));
+        panelSuperior.setBackground(backgroundColor);
+        TitledBorder superiorBorder = BorderFactory.createTitledBorder("Datos de la Empresa");
+        superiorBorder.setTitleColor(textColor);
+        panelSuperior.setBorder(superiorBorder);
 
-        // Etiquetas y campos de entrada
         JLabel nombreEmpresaLabel = new JLabel("Nombre de la Empresa:");
         nombreEmpresaLabel.setForeground(textColor);
-        camposPanel.add(nombreEmpresaLabel);
-        JTextField nombreEmpresaField = new JTextField();
-        camposPanel.add(nombreEmpresaField);
+        nombreEmpresaLabel.setBackground(backgroundColor);
+        JTextField nombreEmpresaField = new JTextField(20);
+        JLabel logoEmpresaLabel = new JLabel("Logo de la Empresa:");
+        logoEmpresaLabel.setForeground(textColor);
+        JButton logoEmpresaButton = new JButton("Seleccionar Logo");
+        logoEmpresaButton.setBackground(buttonBackgroundColor);
+        logoEmpresaButton.setForeground(textColor);
 
-        JLabel cantidadMesasLabel = new JLabel("Cantidad de Mesas a Mostrar:");
-        cantidadMesasLabel.setForeground(textColor);
-        camposPanel.add(cantidadMesasLabel);
-        JTextField cantidadMesasField = new JTextField();
-        camposPanel.add(cantidadMesasField);
+        panelSuperior.add(nombreEmpresaLabel);
+        panelSuperior.add(nombreEmpresaField);
+        panelSuperior.add(logoEmpresaLabel);
+        panelSuperior.add(logoEmpresaButton);
 
-        JLabel permisosAgregarLabel = new JLabel("Permitir Agregar:");
-        permisosAgregarLabel.setForeground(textColor);
-        camposPanel.add(permisosAgregarLabel);
-        JCheckBox permisosAgregarCheckBox = new JCheckBox();
-        camposPanel.add(permisosAgregarCheckBox);
-
-        JLabel permisosModificarLabel = new JLabel("Permitir Modificar:");
-        permisosModificarLabel.setForeground(textColor);
-        camposPanel.add(permisosModificarLabel);
-        JCheckBox permisosModificarCheckBox = new JCheckBox();
-        camposPanel.add(permisosModificarCheckBox);
-
-        JLabel permisosAccederVentanasLabel = new JLabel("Permitir Acceder a Ventanas:");
-        permisosAccederVentanasLabel.setForeground(textColor);
-        camposPanel.add(permisosAccederVentanasLabel);
-        JCheckBox permisosAccederVentanasCheckBox = new JCheckBox();
-        camposPanel.add(permisosAccederVentanasCheckBox);
-
-        JLabel permisosAccederBotonesLabel = new JLabel("Permitir Acceder a Botones:");
-        permisosAccederBotonesLabel.setForeground(textColor);
-        camposPanel.add(permisosAccederBotonesLabel);
-        JCheckBox permisosAccederBotonesCheckBox = new JCheckBox();
-        camposPanel.add(permisosAccederBotonesCheckBox);
-
-        JLabel configuracionActivaLabel = new JLabel("Configuración Activa:");
-        configuracionActivaLabel.setForeground(textColor);
-        camposPanel.add(configuracionActivaLabel);
-        JCheckBox configuracionActivaCheckBox = new JCheckBox();
-        camposPanel.add(configuracionActivaCheckBox);
+        // Panel inferior
+        JPanel panelInferior = new JPanel(new FlowLayout(FlowLayout.LEFT, 50, 50));
+        panelInferior.setBackground(backgroundColor);
+        TitledBorder inferiorBorder = BorderFactory.createTitledBorder("Permisos");
+        inferiorBorder.setTitleColor(textColor);
+        panelInferior.setBorder(inferiorBorder);
+        
+        String [] checkBoxNames = {"Agregar Empleados", "Agregar Clientes", "Personalizar Menu", "Reportes"} ;
+        
+        for (int i = 0; i < checkBoxNames.length; i++) {
+            JCheckBox checkBox = new JCheckBox();
+            String name = checkBoxNames[i];
+            checkBox.setBackground(backgroundColor);
+            checkBox.setForeground(textColor);           
+            checkBox.setText(name);
+            panelInferior.add(checkBox);
+        }
 
         // Crear panel para los botones
         JPanel botonesPanel = new JPanel(new FlowLayout());
@@ -428,7 +447,8 @@ public class vistaHome extends JFrame {
 
         // Agregar paneles al configuracionPanel
         configuracionPanel.setLayout(new BorderLayout());
-        configuracionPanel.add(camposPanel, BorderLayout.CENTER);
+        configuracionPanel.add(panelSuperior, BorderLayout.NORTH);
+        configuracionPanel.add(panelInferior, BorderLayout.CENTER);
         configuracionPanel.add(botonesPanel, BorderLayout.SOUTH);
 
         
@@ -455,10 +475,26 @@ public class vistaHome extends JFrame {
             leftPanel.add(button);
             leftPanel.add(Box.createVerticalStrut(10)); // Espacio entre botones
         }
-
-        add(topPanel, BorderLayout.NORTH); // Agregar el panel superior
+        
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setBorder(new LineBorder(Color.WHITE, 5));
+        
+        bottomPanel.setBackground(backgroundColor);
+        
+        JLabel userLabel = new JLabel("Usuario Activo: " + usuarioAutenticado.getLogin());
+        userLabel.setForeground(textColor);
+        userLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        bottomPanel.add(userLabel, BorderLayout.WEST);
+        
+        dateTimeLabel = new JLabel(getFechaHoraActual());
+        dateTimeLabel.setForeground(textColor);
+        dateTimeLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        bottomPanel.add(dateTimeLabel, BorderLayout.EAST);
+        
+        add(topPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.WEST);
         add(tabbedPane, BorderLayout.CENTER);
+        add(bottomPanel, BorderLayout.SOUTH);
         
         // Añadir placeholder y limpiar el campo de búsqueda cuando el usuario haga clic
         searchReserva.addFocusListener(new FocusAdapter() {
@@ -479,12 +515,37 @@ public class vistaHome extends JFrame {
             }
         });
         
-        // Añadir el ActionListener para la acción al hacer clic
+        // Añadir el ActionListener para la acción al hacer clic para modificar un plano
         modificarPlanoButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Llamar al método que actualiza el plano de mesas
-                actualizarPlanoDeMesas();
+                int opcion = JOptionPane.showConfirmDialog(
+                        null,
+                        "¿Deseas guardar un nuevo plano o modificar uno existente?",
+                        "Seleccionar acción",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE
+                );
+
+                // Si la opción es "Sí", es decir, el usuario desea guardar un nuevo plano
+                if (opcion == JOptionPane.YES_OPTION) {
+                    // Mostrar la vista para registrar un nuevo plano
+                    vistaPlano vistaPlano = new vistaPlano(vistaHome.this);
+                    vistaPlano.setVisible(true);
+                    vistaPlano.setControladorH(controladorH);
+                    new cRegPlano(vistaPlano);
+                    vistaPlano.getBtnGuardar().setVisible(true);
+                }
+                // Si la opción es "No", es decir, el usuario desea modificar un plano existente
+                else if (opcion == JOptionPane.NO_OPTION) {
+                    // Mostrar la vista para modificar un plano
+                    vistaPlano vistaPlano = new vistaPlano(vistaHome.this);
+                    vistaPlano.setVisible(true);
+                    vistaPlano.setControladorH(controladorH);
+                    cRegPlano controladorPlanoR = new cRegPlano(vistaPlano);
+                    controladorPlanoR.llenarDatosAModificar();
+                    vistaPlano.getBtnModificar().setVisible(true);
+                }
             }
         });
         
@@ -503,7 +564,7 @@ public class vistaHome extends JFrame {
         newEmpleadoButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                vistaRegEmpleado vistaReg = new vistaRegEmpleado(); // Abre el formulario de registro de empleado
+                vistaRegEmpleado vistaReg = new vistaRegEmpleado();
                 vistaReg.setVisible(true);
                 vistaReg.setControladorH(controladorH);
                 new cRegEmpleado(vistaReg);
@@ -514,7 +575,7 @@ public class vistaHome extends JFrame {
         newClientButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                vistaRegCliente vistaRC = new vistaRegCliente(); // Abre el formulario de registro de clientes
+                vistaRegCliente vistaRC = new vistaRegCliente();
                 vistaRC.setControladorH(controladorH);
                 vistaRC.setVisible(true);
                 new cRegCliente(vistaRC);
@@ -524,26 +585,41 @@ public class vistaHome extends JFrame {
         // Añadir MouseListener a la tabla de clientes
         clientsTable.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                // Obtener la fila seleccionada
                 int row = clientsTable.rowAtPoint(evt.getPoint());
 
                 // Verificar que la fila seleccionada sea válida
                 if (row >= 0) {
-                    // Obtener el idCliente de la primera columna (suponiendo que es la columna 0)
                     int idCliente = (int) clientsTable.getValueAt(row, 0);
-                    vistaRegCliente vista = new vistaRegCliente();
-                    controladorRC = new cRegCliente (vista);
-                    vista.setControladorH(controladorH);
-                    vista.getBtnNuevo().setVisible(false);
-                    vista.getBtnModificar().setVisible(true);
-                    
 
-                    // Llamar al controlador para buscar al cliente usando el idCliente
-                    controladorRC.buscarCliente(idCliente);
-                    vista.setVisible(true);
+                    // Mostrar cuadro de diálogo de confirmación
+                    int opcion = JOptionPane.showConfirmDialog(
+                        null,
+                        "¿Está seguro de que desea modificar este cliente?",
+                        "Confirmación",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE
+                    );
+
+                    if (opcion == JOptionPane.YES_OPTION) {
+                        // Si el usuario confirma, abrir la vista de edición
+                        vistaRegCliente vista = new vistaRegCliente();
+                        controladorRC = new cRegCliente(vista);
+                        vista.setControladorH(controladorH);
+                        vista.getBtnNuevo().setVisible(false);
+                        vista.getBtnModificar().setVisible(true);
+                        vista.activarCampos(false);
+
+                        // Llamar al controlador para buscar al cliente usando el idCliente
+                        controladorRC.buscarCliente(idCliente);
+                        vista.setVisible(true);
+                    } else {
+                        // Si el usuario selecciona "No" o cierra el diálogo
+                        JOptionPane.showMessageDialog(null, "Modificación cancelada.");
+                    }
                 }
             }
         });
+
         
         // Añadir MouseListener a la tabla de Empleados
         empleadosTable.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -568,6 +644,48 @@ public class vistaHome extends JFrame {
                 }
             }
         });
+        
+        // Añadir MouseListener a la tabla de carta
+        cartaTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                // Obtener la fila y la columna seleccionada
+                int row = cartaTable.rowAtPoint(evt.getPoint());
+                int column = cartaTable.columnAtPoint(evt.getPoint());
+
+                // Limitar la ejecución solo a las columnas 0 a 4
+                if (column >= 0 && column <= 4) {
+                    int opcion = JOptionPane.showConfirmDialog(
+                        null,
+                        "¿Está seguro de querer modificar este plato?",
+                        "Confirmación",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE
+                    );
+
+                    // Acciones según la respuesta del usuario
+                    if (opcion == JOptionPane.YES_OPTION) {
+                        if (row >= 0) {
+                            // Obtener el idPlato de la primera columna (columna 0)
+                            int idPlato = (int) cartaTable.getValueAt(row, 0);
+                            vistaRegProducto vista = new vistaRegProducto();
+                            controladorP = new cRegProducto(vista);
+                            vista.setIdPlato(idPlato);
+                            vista.activarCampos(false);
+                            controladorP.llenarDatosParaActualizar();
+                            vista.getRegistrarButton().setVisible(false);
+                            vista.getModificarButton().setVisible(true);
+                            vista.setControladorH(controladorH);
+                            vista.setVisible(true);
+                        }
+                    } else if (opcion == JOptionPane.NO_OPTION) {
+                        JOptionPane.showMessageDialog(null, "Has seleccionado 'No'. La acción se ha cancelado.");
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Has cerrado el diálogo o cancelado la operación.");
+                    }
+                }
+            }
+        });
+
         
         //Añadir Mouse listener a la tabla productos
         cartaTableModel.addTableModelListener(new TableModelListener() {
@@ -625,94 +743,89 @@ public class vistaHome extends JFrame {
         });
     }
     
-    private void actualizarPlanoDeMesas() {
-        // Obtener las mesas existentes desde el controlador
-        ArrayList<Mesa> mesasExistentes = controladorH.obtenerTodasLasMesas();
-        // Solicitar al usuario el número de mesas a agregar o actualizar
-        String input = JOptionPane.showInputDialog("Ingrese el número de mesas a agregar o modificar:");
-        if (input != null && !input.isEmpty()) {
-            try {
-                int cantidadMesas = Integer.parseInt(input);
-                if (cantidadMesas <= 0) {
-                    JOptionPane.showMessageDialog(null, "Debe ingresar un número mayor que 0.");
-                    return;
-                }
-
-                // Actualizar las mesas existentes y crear las adicionales si es necesario
-                for (int i = 1; i <= cantidadMesas; i++) {
-                    // Solicitar la capacidad de la mesa
-                    String capacidadInput = JOptionPane.showInputDialog("Ingrese la capacidad para la Mesa " + i + ":");
-                    if (capacidadInput == null || capacidadInput.isEmpty()) {
-                        JOptionPane.showMessageDialog(null, "Debe ingresar una capacidad válida.");
-                        i--; // Retrocede el índice para volver a pedir la capacidad para esta mesa
-                        continue;
-                    }
-
-                    int capacidad;
-                    try {
-                        capacidad = Integer.parseInt(capacidadInput);
-                        if (capacidad <= 0) {
-                            JOptionPane.showMessageDialog(null, "Debe ingresar un número mayor que 0.");
-                            i--; // Retrocede el índice para volver a pedir la capacidad para esta mesa
-                            continue;
-                        }
-                    } catch (NumberFormatException ex) {
-                        JOptionPane.showMessageDialog(null, "Por favor ingrese un número válido.");
-                        i--; // Retrocede el índice para volver a pedir la capacidad para esta mesa
-                        continue;
-                    }
-
-                    if (i <= mesasExistentes.size()) {
-                        // Si la mesa ya existe, actualizar sus datos
-                        Mesa mesaExistente = mesasExistentes.get(i - 1);
-                        mesaExistente.setNumeroMesa(i);
-                        mesaExistente.setCapacidad(capacidad);
-                        controladorH.actualizarMesa(mesaExistente);
-                    } else {
-                        // Si la mesa no existe, crear una nueva
-                        controladorH.agregarMesa(i, capacidad, "Disponible");
-                    }
-                }
-
-                // Llenar la vista con las mesas actualizadas en la base de datos
-                controladorH.mostrarTodasLasMesas();
-
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(null, "Por favor ingrese un número válido.");
-            }
-        }
-    }
 
     
     /**
-    * Método para llenar la vista con los paneles de las mesas obtenidas de la base de datos.
+    * Método para llenar la vista con los paneles de las mesas.
     */
-    public void llenarVistaConMesas(ArrayList<Mesa> mesas) {
+    public void llenarVistaConMesas(ArrayList<Mesa> mesas) {              
         // Limpiar el panel de mesas actual
         rightTablePanel.removeAll();
-        
+
         // Crear un panel visual para cada mesa
         for (Mesa mesa : mesas) {
             JPanel tablePanel = new JPanel();
             tablePanel.setBorder(BorderFactory.createLineBorder(textColor, 2));
-            tablePanel.setBackground(backgroundColor);
             tablePanel.setLayout(new BorderLayout());
 
-            // Crear y agregar la etiqueta con el número de la mesa
-            JLabel tableLabel = new JLabel("Mesa " + mesa.getNumeroMesa());
-            tableLabel.setHorizontalAlignment(JLabel.CENTER);
-            tableLabel.setForeground(textColor);
-            tablePanel.add(tableLabel, BorderLayout.CENTER);
+            // Crear el panel para contener tanto el título como la imagen
+            JPanel imagePanel = new JPanel();
+            imagePanel.setLayout(new BorderLayout());
+            imagePanel.setBackground(Color.decode("#2A4463"));
+            // Configuración para mesas reservadas
+            if ("Reservada".equalsIgnoreCase(mesa.getEstadoMesa().trim())) {
+                Timer timer = new Timer(500, new ActionListener() {
+                    boolean isRed = false;
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        // Alternar colores
+                        SwingUtilities.invokeLater(() -> {
+                            imagePanel.setBackground(isRed ? Color.RED : backgroundColor);
+                            imagePanel.revalidate();
+                            imagePanel.repaint();
+                        });
+                        isRed = !isRed;
+                    }
+                });
+                timer.start();
+            }else if("Ocupada".equalsIgnoreCase(mesa.getEstadoMesa().trim())){
+                imagePanel.setBackground(Color.GREEN);
+            }
+
+            
+            JLabel titleLabel = new JLabel("Mesa " + mesa.getNumeroMesa());
+            titleLabel.setHorizontalAlignment(JLabel.CENTER);
+            titleLabel.setForeground(textColor);
+            imagePanel.add(titleLabel, BorderLayout.NORTH);
+            
+            JLabel capacidadLabel = new JLabel("Capacidad: " + mesa.getCapacidad() + " personas");
+            capacidadLabel.setHorizontalAlignment(JLabel.CENTER);
+            capacidadLabel.setForeground(textColor);
+            imagePanel.add(capacidadLabel, BorderLayout.SOUTH);
+            
+            String imagePath = "/img/mesa-de-comedor.png";
+            ImageIcon originalIcon = new ImageIcon(getClass().getResource(imagePath));
+
+            // Escalar la imagen (si es necesario)
+            Image scaledImage = originalIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+            ImageIcon scaledIcon = new ImageIcon(scaledImage);
+
+            // Crear un JLabel para la imagen
+            JLabel imageLabel = new JLabel(scaledIcon);
+            imageLabel.setHorizontalAlignment(JLabel.CENTER);
+            imagePanel.add(imageLabel, BorderLayout.CENTER);  // Añadir la imagen en el centro
+
+            // Añadir el panel con la imagen y el título al panel principal
+            tablePanel.add(imagePanel, BorderLayout.CENTER);
 
             // Añadir MouseListener para abrir vistaRegReserva al hacer clic
-            final int mesaNumero = mesa.getNumeroMesa();
             tablePanel.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    vistaRegReserva vistaR = new vistaRegReserva(mesaNumero);
-                    vistaR.setVisible(true);
-                    new cRegReserva(vistaR);
-                    vistaR.setControladorH(controladorH);
+                    if (!"Reservada".equalsIgnoreCase(mesa.getEstadoMesa()) && !"Ocupada".equalsIgnoreCase(mesa.getEstadoMesa())) {
+                        vistaRegReserva vistaR = new vistaRegReserva(mesa,usuarioAutenticado);
+                        vistaR.setVisible(true);                        
+                        new cRegReserva(vistaR);
+                        vistaR.setControladorH(controladorH);
+                    } else {
+                        JOptionPane.showMessageDialog(
+                            tablePanel,
+                            "Esta mesa está " + mesa.getEstadoMesa() + " y no se puede modificar.",
+                            "Mesa " + mesa.getEstadoMesa() ,
+                            JOptionPane.WARNING_MESSAGE
+                        );
+                    }
                 }
             });
 
@@ -720,10 +833,10 @@ public class vistaHome extends JFrame {
             rightTablePanel.add(tablePanel);
         }
 
-       // Actualizar el diseño del panel para que se muestren las mesas nuevas
-       rightTablePanel.revalidate();
-       rightTablePanel.repaint();
-   }
+        iniciarReloj();
+        rightTablePanel.revalidate();
+        rightTablePanel.repaint();
+    }
     
     /**
      * Método para establecer el controlador para empleados.
@@ -762,7 +875,8 @@ public class vistaHome extends JFrame {
                 cli.getNombre(),
                 cli.getApellido(),
                 cli.getEmail(),
-                cli.getTelefono()
+                cli.getTelefono(),
+                cli.getDni()
             });
         }
     }
@@ -802,6 +916,45 @@ public class vistaHome extends JFrame {
             });
         }
     }
+    
+    public void mostrarReservas(ArrayList<Reserva> reservas) {
+        reservasTableModel.setRowCount(0); // Limpiar tabla
+
+        for (Reserva r : reservas) {
+            if (r.getCliente() != null && r.getCliente().getNombre() != null &&
+                r.getEstadoReserva() != null && r.getMesa() != null && r.getMesa().getEstadoMesa() != null &&
+                r.getPedido() != null && r.getPedido().getEstado() != null) {
+
+                // Crear el botón y configurar el comando
+                JButton btnConfirmar = new JButton("Confirmar");
+                btnConfirmar.setActionCommand(String.valueOf(r.getIdReserva()));       
+
+                // Agregar la fila a la tabla
+                reservasTableModel.addRow(new Object[]{
+                    btnConfirmar,
+                    r.getIdReserva(),
+                    r.getCliente().getNombre(),
+                    r.getEstadoReserva(),
+                    r.getFechaReserva(),
+                    r.getHoraReserva(),
+                    r.getMesa().getEstadoMesa(),
+                    r.getPedido().getEstado()
+                });
+            }
+        }
+    }
+    
+    private void iniciarReloj() {
+    Timer timer = new Timer(1000, new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            dateTimeLabel.setText(getFechaHoraActual());
+        }
+    });
+    timer.start();
+}
+
+
 
     /**
      * Método para establecer el controlador principal del sistema.
@@ -810,6 +963,12 @@ public class vistaHome extends JFrame {
     public void setControladorH(cHome controladorH) {
         this.controladorH = controladorH;
     }
+
+    public cHome getControladorH() {
+        return controladorH;
+    }
+    
+    
     
     /**
      * Método para establecer el controlador principal del sistema.
@@ -819,18 +978,11 @@ public class vistaHome extends JFrame {
         this.controladorConf = controladorConf;
     }
     
-    /**
-    * Establece el usuario autenticado en la vista.
-    * Este método se utiliza para asignar el objeto {@link Usuario} que representa
-    * al usuario autenticado, permitiendo que la vista tenga acceso a los datos
-    * del usuario y los utilice en la interfaz de usuario (por ejemplo, para mostrar
-    * el nombre del usuario, su rol, etc.).
-    * 
-    * @param usuario El objeto {@link Usuario} que representa al usuario autenticado.
-    *                Este parámetro no debe ser {@code null}.
-    */
-    public void setUsuario(Usuario usuario) {
-        this.usuarioAutenticado = usuario;
+    
+    private String getFechaHoraActual() {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        return sdf.format(new Date());
     }
+
 
 }

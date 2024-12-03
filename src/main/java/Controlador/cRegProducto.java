@@ -40,4 +40,23 @@ public class cRegProducto {
             vistaRP.mostrarMensaje("Error al agregar el platillo al menu");
         }
     }
+    
+    public void actualizarProducto(int idProducto, String nombre, double precioPersonal, 
+            double precioFamiliar, boolean disponibilidad, int stock){
+        boolean exito = daoP.actualizarProductoPorId(idProducto, nombre, precioPersonal, precioFamiliar, disponibilidad, stock);
+        if(exito){
+            vistaRP.mostrarMensaje("Plato Actualizado Correctamente");
+        }else{
+            vistaRP.mostrarMensaje("Error al Actualizar");
+        }
+    }
+    
+    public void llenarDatosParaActualizar(){
+        Producto p = daoP.obtenerProductoPorId(vistaRP.getIdPlato());
+        vistaRP.getNombrePlatoField().setText(p.getNombreProducto());
+        vistaRP.getStockField().setText(String.valueOf(p.getStock()));
+        vistaRP.getPrecioFamiliarField().setText(String.valueOf(p.getPrecioFamiliar()));
+        vistaRP.getPrecioPersonalField().setText(String.valueOf(p.getPrecioPersonal()));
+        
+    }
 }

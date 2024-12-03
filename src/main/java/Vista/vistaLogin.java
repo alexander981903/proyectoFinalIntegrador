@@ -16,15 +16,15 @@ import Controlador.cLogin;
 import Controlador.cUsuario;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 
 public class vistaLogin extends JFrame {
     
     private cRegEmpleado controladorE ;
     private cHome controladorH;
     private cLogin controladorL;
-    private vistaHome vistaH;
     
     // Color de fondo
     private final Color backgroundColor = new Color(0x15, 0x22, 0x31);
@@ -32,20 +32,14 @@ public class vistaLogin extends JFrame {
     private final Color textColor = Color.WHITE;
     
     private JPanel panel;
-    
     private GridBagConstraints gbc;
-    
     private JLabel userLabel;
     private JLabel passwordLabel;
-    
     private JTextField userField;
-    
-    private JPasswordField passwordField;
-    
+    private JPasswordField passwordField; 
     private JButton loginButton;
-    
     private JLabel createAccountLabel; 
-    
+    private Point initialClick;
     /**
      * Constructor que configura la ventana de inicio de sesión.
      * Inicializa los componentes de la interfaz gráfica y ajusta las propiedades de la ventana.
@@ -54,10 +48,35 @@ public class vistaLogin extends JFrame {
         // Configuración de la ventana
         setTitle("Login");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(400, 300);
+        setSize(600, 390);
         setLocationRelativeTo(null); // Centrar en la pantalla    
-        
+        setUndecorated(true);
         initComponents();
+        
+        // Hacer la ventana movible
+        addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                initialClick = e.getPoint();
+                getComponentAt(initialClick);
+            }
+        });
+
+        addMouseMotionListener(new MouseMotionAdapter() {
+            public void mouseDragged(MouseEvent e) {
+                // Obtener la posición del mouse en la pantalla
+                int thisX = getLocation().x;
+                int thisY = getLocation().y;
+
+                // Determinar el movimiento del mouse
+                int xMoved = e.getX() - initialClick.x;
+                int yMoved = e.getY() - initialClick.y;
+
+                // Mover la ventana
+                int X = thisX + xMoved;
+                int Y = thisY + yMoved;
+                setLocation(X, Y);
+            }
+        });
     }
     
     /**
@@ -66,84 +85,119 @@ public class vistaLogin extends JFrame {
      */
     private void initComponents(){
         
-        // Panel principal
-        panel = new JPanel();
-        panel.setBackground(backgroundColor);
-        panel.setLayout(new GridBagLayout()); // Usar GridBagLayout para centrar los componentes
+        // Panel principal con BorderLayout
+        JPanel mainPanel = new JPanel(new BorderLayout());
 
-        gbc = new GridBagConstraints();
+        // Panel izquierdo para la imagen de fondo
+        JPanel leftPanel = new JPanel();
+        leftPanel.setLayout(new BorderLayout());
+        leftPanel.setPreferredSize(new Dimension(300, 400)); // Ancho del panel izquierdo
+        leftPanel.setBackground(backgroundColor); 
+
+        // Imagen de fondo
+        String imagePath = "/img/login.png"; 
+        ImageIcon backgroundImage = new ImageIcon(getClass().getResource(imagePath));
+        Image scaledImage = backgroundImage.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH);
+        JLabel backgroundLabel = new JLabel(new ImageIcon(scaledImage));
+        backgroundLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        leftPanel.add(backgroundLabel, BorderLayout.CENTER);
+
+        // Panel derecho para los campos y botones
+        JPanel rightPanel = new JPanel(new GridBagLayout());
+        rightPanel.setBackground(backgroundColor);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10); // Espaciado entre componentes
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(10, 10, 10, 10); // Espacio alrededor de los componentes
+
+        // Botón para salir de la aplicación
+        JButton exitButton = new JButton();
+        exitButton.setPreferredSize(new Dimension(2,40));
+        exitButton.setIcon(new ImageIcon(getClass().getResource("/img/icon cancel.png"))); 
+        exitButton.setFocusPainted(false); // Sin bordes al seleccionar
+        exitButton.setContentAreaFilled(false);
+        exitButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        exitButton.setBorderPainted(false); // Sin borde
+        exitButton.setToolTipText("Salir de la aplicación");
+        // Evento para cerrar la aplicación
+        exitButton.addActionListener(e -> System.exit(0));
+        gbc.gridx = 1; // Columna
+        gbc.gridy = 0; // Fila
+        gbc.anchor = GridBagConstraints.NORTHEAST; // Alinear a la esquina superior derecha
+        rightPanel.add(exitButton, gbc);
 
         // Etiqueta de nombre de usuario
         userLabel = new JLabel("Nombre de usuario:");
-        userLabel.setForeground(textColor);
-        gbc.gridx = 0; // Columna
-        gbc.gridy = 0; // Fila
-        panel.add(userLabel, gbc);
+        userLabel.setForeground(Color.WHITE);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2; // Ocupa dos columnas
+        gbc.anchor = GridBagConstraints.CENTER; // Centrar el texto
+        rightPanel.add(userLabel, gbc);
 
         // Campo de texto para el nombre de usuario
         userField = new JTextField(20);
-        gbc.gridx = 1; // Columna
-        gbc.gridy = 0; // Fila
-        panel.add(userField, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        rightPanel.add(userField, gbc);
 
         // Etiqueta de contraseña
         passwordLabel = new JLabel("Contraseña:");
-        passwordLabel.setForeground(textColor);
-        gbc.gridx = 0; // Columna
-        gbc.gridy = 1; // Fila
-        panel.add(passwordLabel, gbc);
+        passwordLabel.setForeground(Color.WHITE);
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        rightPanel.add(passwordLabel, gbc);
 
         // Campo de texto para la contraseña
         passwordField = new JPasswordField(20);
-        gbc.gridx = 1; // Columna
-        gbc.gridy = 1; // Fila
-        panel.add(passwordField, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        rightPanel.add(passwordField, gbc);
 
         // Botón de inicio de sesión
         loginButton = new JButton("Iniciar sesión");
-        loginButton.setBackground(buttonColor);
-        loginButton.setForeground(textColor);
-        gbc.gridx = 0; // Columna
-        gbc.gridy = 2; // Fila
-        gbc.gridwidth = 2; // Ocupa dos columnas
-        panel.add(loginButton, gbc);
+        loginButton.setBackground(new Color(42, 68, 99));
+        loginButton.setForeground(Color.WHITE);
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 2;
+        rightPanel.add(loginButton, gbc);
 
-        // Etiqueta "Crear una cuenta nueva"
+        // Etiqueta para crear una cuenta nueva
         createAccountLabel = new JLabel("¿Crear una cuenta nueva?");
-        createAccountLabel.setForeground(textColor);
-        gbc.gridx = 0; // Columna
-        gbc.gridy = 3; // Fila
-        gbc.gridwidth = 2; // Ocupa dos columnas
-        createAccountLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        createAccountLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)); // Cambiar el cursor a mano
-        panel.add(createAccountLabel, gbc);
+        createAccountLabel.setForeground(Color.WHITE);
+        createAccountLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        rightPanel.add(createAccountLabel, gbc);
 
-        // Evento al hacer clic en "Crear una cuenta nueva"
+        // Eventos
         createAccountLabel.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {                
-                vistaRegUsuario regUsuario = new vistaRegUsuario();
-                new cUsuario (regUsuario);
-                new cHome(regUsuario);
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                vistaRegUsuario regUsuario = new vistaRegUsuario(vistaLogin.this);
+                new cUsuario(regUsuario);
                 regUsuario.setVisible(true);
-                dispose(); // Cerrar la ventana de login al abrir el registro
+                dispose();
             }
         });
 
-        // Evento al hacer clic en el botón de inicio de sesión
-        loginButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String username = userField.getText();
-                String password = new String(passwordField.getPassword());
-                // lógica de inicio de sesión
-                controladorL.validarCredenciales(username, password);
-            }
+        loginButton.addActionListener(e -> {
+            String username = userField.getText();
+            String password = new String(passwordField.getPassword());
+            controladorL.validarCredenciales(username, password);
         });
 
-        // Añadir el panel al frame
-        add(panel);
+        // Agregar los paneles al panel principal
+        mainPanel.add(leftPanel, BorderLayout.WEST);
+        mainPanel.add(rightPanel, BorderLayout.CENTER);
+
+        // Agregar el panel principal al JFrame
+        add(mainPanel);
+
         
     }
 

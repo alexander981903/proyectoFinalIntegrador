@@ -18,6 +18,7 @@ public class Cliente {
     private String apellido;
     private String Email;
     private String telefono;
+    private String Dni;
     
     /**
      * Constructor por defecto.
@@ -34,13 +35,15 @@ public class Cliente {
      * @param apellido Apellido del cliente
      * @param Email Email del cliente
      * @param telefono Número de teléfono del cliente
+     * @param Dni Documento Nacional de Identidad
      */
-    public Cliente(int idCliente, String nombre, String apellido, String Email, String telefono) {
+    public Cliente(int idCliente, String nombre, String apellido, String Email, String telefono, String Dni) {
         this.idCliente = idCliente;
         this.nombre = nombre;
         this.apellido = apellido;
         this.Email = Email;
         this.telefono = telefono;
+        this.Dni = Dni;
     }
     
      /**
@@ -132,5 +135,14 @@ public class Cliente {
     public void setTelefono(String telefono) {
         this.telefono = telefono;
     }
+
+    public String getDni() {
+        return Dni;
+    }
+
+    public void setDni(String Dni) {
+        this.Dni = Dni;
+    }
+    
     
 }

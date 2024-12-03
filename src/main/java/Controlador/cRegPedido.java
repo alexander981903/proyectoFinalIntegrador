@@ -34,5 +34,11 @@ public class cRegPedido {
        Producto producto = daoP.obtenerProductoPorId(id);
        vistaRegPed.llenarCamposPlato(producto);
    }
+   
+   public Producto getProductoID(){
+       int id = vistaRegPed.getIdPlato();
+       Producto producto = daoP.obtenerProductoPorId(id);
+       return producto;
+   }
     
 }
