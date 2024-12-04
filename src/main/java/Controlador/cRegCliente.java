@@ -64,7 +64,6 @@ public class cRegCliente {
      * @param idCliente El identificador único del cliente que se desea buscar.
      */
     public void buscarCliente(int idCliente) {
-        // Recuperamos al cliente desde el DAO
         Cliente cliente = dao.buscarPorId(idCliente);
         
         if (cliente != null) {
@@ -96,12 +95,11 @@ public class cRegCliente {
         cliente.setEmail(email);
         cliente.setTelefono(telefono);
         cliente.setDni(dni);
-
-        // Intentamos actualizar el cliente en la base de datos desde dao
+        
         boolean exito = dao.actualizarCliente(cliente);
         if (exito) {
             vistaRC.mostrarMensaje("Cliente actualizado exitosamente.");
-            vistaRC.dispose(); // Cerramos la ventana después de la actualización
+            vistaRC.dispose(); 
         } else {
             vistaRC.mostrarMensaje("Error al actualizar Cliente.");
         }

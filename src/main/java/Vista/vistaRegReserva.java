@@ -141,7 +141,8 @@ public class vistaRegReserva extends JFrame {
 
         }else if(usuarioAutenticado.getRol().equals("Cliente")){
             JTextField clienteField = new JTextField(20);
-            clienteField.setText(usuarioAutenticado.getLogin());
+            Cliente c =  (Cliente) usuarioAutenticado.getObj();
+            clienteField.setText(c.getNombre()+ " " + c.getApellido());
             clienteField.setEditable(false);
             camposPanel.add(clienteField);
         }
@@ -296,7 +297,6 @@ public class vistaRegReserva extends JFrame {
                     }else if(usuarioAutenticado.getRol().equals("Cliente")){
                         Cliente usuario = (Cliente) usuarioAutenticado.getObj();
                         int idCliente = usuario.getIdCliente();
-                        System.out.println("ID cliente: " + idCliente);
                         int idMesa = mesa.getIdMesa();
                         Date fechaReserva = fechaChooser.getDate();
                         if (fechaReserva == null) {

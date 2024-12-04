@@ -8,6 +8,7 @@ import Modelo.Cliente;
 import Modelo.Reserva;
 import Modelo.Mesa;
 import Modelo.Pedido;
+import Modelo.Producto;
 import conf.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -90,6 +91,51 @@ public class ReservaDao {
             System.err.println("Error al obtener reservas: " + e.getMessage());
         }
         return reservas;
+    }
+    
+    public ArrayList<Producto> obtenerProductosPorReserva(int idReserva) {
+        ArrayList<Producto> productos = new ArrayList<>();
+        String sql = """
+            SELECT 
+                r.idReserva,
+                p.idPedido,
+                pp.idProducto,
+                pr.nombrePlato,
+                pp.cantidad,
+                pp.tamaño,
+                pp.precio,
+                pp.total
+            FROM 
+                reserva r
+            JOIN 
+                pedido p ON r.idPedido = p.idPedido
+            JOIN 
+                pedido_producto pp ON p.idPedido = pp.idPedido
+            JOIN 
+                producto pr ON pp.idProducto = pr.idProducto
+            WHERE 
+                r.idReserva = ?;
+        """;
+
+        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+            ps.setInt(1, idReserva);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Producto producto = new Producto();
+                    producto.setIdProducto(rs.getInt("idProducto"));
+                    producto.setNombreProducto(rs.getString("nombrePlato"));
+                    producto.setCantidad(rs.getInt("cantidad"));
+                    producto.setTamaño(rs.getString("tamaño"));
+
+                    productos.add(producto);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener productos de la reserva: " + e.getMessage());
+        }
+
+        return productos;
     }
 
 

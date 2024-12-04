@@ -88,7 +88,7 @@ public class cUsuario {
         boolean existeAdmin = daoU.existeAdmin();
         if (!existeAdmin) {
             int respuesta = JOptionPane.showConfirmDialog(null, 
-                    "No hay un administrador registrado. ¿Desea registrar uno ahora?", 
+                    "No hay un administrador registrado. ¿Desea registrar uno ahora?.", 
                     "Registrar Administrador", JOptionPane.YES_NO_OPTION);
             return respuesta == JOptionPane.YES_OPTION;
         }            

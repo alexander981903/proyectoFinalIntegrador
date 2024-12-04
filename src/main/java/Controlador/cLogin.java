@@ -41,16 +41,15 @@ public class cLogin {
      * @param clave La contraseña ingresada.
      */
     public void validarCredenciales(String login, String clave) {
-        // Validación de las credenciales del usuario mediante el DAO
         Usuario user = daoU.validarCredenciales(login, clave);
 
         if (user != null) {
-                    vistaL.setVisible(false); // Ocultar la vista de login
-                    vistaHome vistaHome = new vistaHome(user); // Crear la vista principal
-                    vistaHome.setVisible(true);  // Mostrar la vista principal
-                    new cHome(vistaHome); // Inicializar el controlador de la vista principal
+                    vistaL.setVisible(false);
+                    vistaHome vistaHome = new vistaHome(user);
+                    vistaHome.setVisible(true);
+                    new cHome(vistaHome);
+                    new cReporte(vistaHome);
         } else {
-            // Si las credenciales son incorrectas, mostramos un mensaje de error
             vistaL.mostrarMensaje("Credenciales incorrectas");
         }
     }

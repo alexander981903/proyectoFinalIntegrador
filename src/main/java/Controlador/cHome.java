@@ -84,8 +84,8 @@ public class cHome {
      * @param nombre El nombre del cliente que se desea buscar.
      */
     public void buscarEmpleadosPorNombre(String nombre){
-        ArrayList<Empleado> empleados = daoE.buscarEmpleadoPorNombre(nombre); // Busca los clientes por nombre
-        vistaH.mostrarEmpleados(empleados); // Muestra los resultados de la búsqueda en la vista
+        ArrayList<Empleado> empleados = daoE.buscarEmpleadoPorNombre(nombre);
+        vistaH.mostrarEmpleados(empleados);
     }
 
     /**

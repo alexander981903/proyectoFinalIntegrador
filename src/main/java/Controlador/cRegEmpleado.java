@@ -5,6 +5,7 @@
 package Controlador;
 
 import Modelo.Empleado;
+import Modelo.Usuario;
 import Vista.vistaRegEmpleado;
 import dao.EmpleadoDao;
 
@@ -38,14 +39,19 @@ public class cRegEmpleado {
      * @param cargo Cargo o puesto del empleado.
      * @param turno Turno en el que trabaja el empleado.
      */
-    public void agregarEmpleado(String nombreEmp, String cargo, String turno) {
+    public void agregarEmpleado(String nombreEmp, String cargo, String turno,String login,String clave,String rol) {
         Empleado emp = new Empleado();
         emp.setNombreEmp(nombreEmp);
         emp.setCargo(cargo);
         emp.setTurno(turno);
         
+        Usuario user = new Usuario();
+        user.setLogin(login);
+        user.setClave(clave);
+        user.setRol(rol);
+        
         // Intentamos insertar el empleado en la base de datos
-        boolean exito = dao.insertarEmpleado(emp);
+        boolean exito = dao.insertarEmpleadoConUsuario(emp,user);
         if (exito) {
             vista.mostrarMensaje("Empleado agregado exitosamente.");
         } else {

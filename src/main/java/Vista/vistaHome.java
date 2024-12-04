@@ -21,12 +21,14 @@ import javax.swing.table.DefaultTableModel;
 import RenderingTable.ButtonRendererEditor;
 import RenderingTable.CheckboxRendererEditor;
 import RenderingTable.DecimalFormatRenderer;
+import com.toedter.calendar.JDateChooser;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 
 public class vistaHome extends JFrame {
@@ -65,25 +67,34 @@ public class vistaHome extends JFrame {
     private JButton newClientButton;
     private JButton searchButton1;
     private JButton newEmpleadoButton;
+    private JButton modificarPlanoButton;
+    private JButton btnTabla;
     
     private JTable clientsTable;
     private JTable empleadosTable;
     private JTable cartaTable;
     private JTable reservasTable;
+    private JTable tableReportes;
     
     private DefaultTableModel mTablaEmpleado;
     private DefaultTableModel mTablaCliente;
     private DefaultTableModel cartaTableModel;
     private DefaultTableModel reservasTableModel;
+    private DefaultTableModel mtableReportes;
     
     private JTextField searchField1;
     private JTextField searchField;
     private JTextField searchReserva;
+    private JTextField clienteField;
+    
+    private JComboBox<String> tipoReporte;
     
     private cHome controladorH;
-    
-    
-    
+    private cReporte controladorReporte;
+    java.util.Date fechaInicioUtil;
+    java.util.Date fechaFinUtil;
+    private JDateChooser fechaFin;
+    private JDateChooser fechaInicio;
     // Color personalizado
     private final Color backgroundColor = new Color(0x0B, 0x11, 0x19);
     private final Color buttonBackgroundColor = new Color(0x20, 0x33, 0x4A);
@@ -133,9 +144,7 @@ public class vistaHome extends JFrame {
         scrollPane = new JScrollPane(leftPanel);
         scrollPane.setBackground(backgroundColor);
         scrollPane.getViewport().setBackground(backgroundColor);
-
-        // Crear botones con nombres específicos y ajustar al ancho del panel izquierdo
-        String[] buttonNames = {"Reserva", "Clientes", "Empleados","Carta", "Reportes", "Configuración"};
+        
 
         // Inicializar el TabbedPane
         tabbedPane = new JTabbedPane();
@@ -158,7 +167,7 @@ public class vistaHome extends JFrame {
         searchReserva.setForeground(Color.GRAY); // Color de texto de búsqueda
         
         // Botón de reserva de mesa
-        JButton modificarPlanoButton = new JButton("Modificar Plano");
+        modificarPlanoButton = new JButton("Modificar Plano");
         modificarPlanoButton.setBackground(Color.LIGHT_GRAY); // Cambia el color de fondo
         modificarPlanoButton.setForeground(textColor); // Cambia el color del texto
 
@@ -182,11 +191,7 @@ public class vistaHome extends JFrame {
 
         // Crear la tabla y establecer el modelo
         reservasTable = new JTable(reservasTableModel);
-        ButtonRendererEditor rendererEditor = new ButtonRendererEditor(reservasTable, this);
-
-        // Configurar el renderer y editor para el botón
-        reservasTable.getColumnModel().getColumn(0).setCellRenderer(rendererEditor);
-        reservasTable.getColumnModel().getColumn(0).setCellEditor(rendererEditor);
+        
 
         // Ocultar la columna de ID
         reservasTable.getColumnModel().getColumn(1).setMaxWidth(0);
@@ -307,7 +312,7 @@ public class vistaHome extends JFrame {
         empleadosTable = new JTable (mTablaEmpleado);
         empleadosTable.setBackground(backgroundColor);
         empleadosTable.setForeground(textColor);
-        empleadosTable.setFillsViewportHeight(true); // Hace que la tabla llene el espacio disponible
+        empleadosTable.setFillsViewportHeight(true);
 
         // Crear un JScrollPane para la tabla
         tableScrollPane1 = new JScrollPane(empleadosTable);
@@ -347,29 +352,31 @@ public class vistaHome extends JFrame {
         // Crear un panel de título que contendrá tanto el título centrado como el botón
         JPanel finalTituloPanel = new JPanel(new BorderLayout());
         finalTituloPanel.setBackground(backgroundColor);
-        finalTituloPanel.add(centroPanel, BorderLayout.CENTER); // Título centrado
-        finalTituloPanel.add(derechaPanel, BorderLayout.EAST);  // Botón a la derecha
+        finalTituloPanel.add(centroPanel, BorderLayout.CENTER);
+        finalTituloPanel.add(derechaPanel, BorderLayout.EAST);
 
         // Crear la tabla cartaTable con una columna de checkbox
         cartaTableModel = new DefaultTableModel(
                 new Object[]{"ID", "Plato", "Personal", "Fuente","stock", "Disponibilidad"},0); 
         cartaTable = new JTable(cartaTableModel);
-        cartaTable.setFillsViewportHeight(true); // Hace que la tabla llene el espacio disponible
-
+        cartaTable.setBackground(new Color(240, 240, 240));
+        cartaTable.setFillsViewportHeight(true);
+        cartaTable.getTableHeader().setBackground(new Color(0, 51, 102));
+        cartaTable.getTableHeader().setForeground(textColor);
+        cartaTable.setFont(new Font("Arial", Font.PLAIN, 14));
+        cartaTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 16));
         
-        TableColumn column = cartaTable.getColumnModel().getColumn(5); // La columna de disponibilidad
-        column.setCellRenderer(new CheckboxRendererEditor(cartaTable));  // Establecer el renderizador
-        column.setCellEditor(new CheckboxRendererEditor(cartaTable));    // Establecer el editor
+        TableColumn column = cartaTable.getColumnModel().getColumn(5);
+        column.setCellRenderer(new CheckboxRendererEditor(cartaTable));
+        column.setCellEditor(new CheckboxRendererEditor(cartaTable));
         
         // Aplicar DecimalFormatRenderer a las columnas de precios
-        TableColumn personalColumn = cartaTable.getColumnModel().getColumn(2); // Columna Personal
+        TableColumn personalColumn = cartaTable.getColumnModel().getColumn(2);
         personalColumn.setCellRenderer(new DecimalFormatRenderer(cartaTable));
 
-        TableColumn familiarColumn = cartaTable.getColumnModel().getColumn(3); // Columna Familiar
+        TableColumn familiarColumn = cartaTable.getColumnModel().getColumn(3);
         familiarColumn.setCellRenderer(new DecimalFormatRenderer(cartaTable));
 
-
-        // Agregar la tabla a un JScrollPane para soporte de desplazamiento
         JScrollPane cartaScrollPane = new JScrollPane(cartaTable);
         cartaScrollPane.setBackground(backgroundColor);
 
@@ -380,11 +387,120 @@ public class vistaHome extends JFrame {
         // Agregar cartaPanel como una nueva pestaña en tabbedPane
         tabbedPane.addTab("Carta", cartaPanel);
 
-        //pestañas para otros botones
+        // Pestañas para otros botones
         reportesPanel = new JPanel();
         reportesPanel.setBackground(backgroundColor);
-        reportesPanel.add(new JLabel("Panel de Reportes"));
+        reportesPanel.setLayout(new BorderLayout());
+
+        // Título del panel de reportes
+        JLabel titleLabel = new JLabel("Panel de Reportes", JLabel.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        titleLabel.setForeground(textColor);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        reportesPanel.add(titleLabel, BorderLayout.NORTH);
+
+        // Panel de filtros
+        JPanel filtersPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        TitledBorder border = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Filtros de Reporte");
+        border.setTitleColor(Color.WHITE);
+        filtersPanel.setBorder(border);
+        filtersPanel.setBackground(backgroundColor);
+
+        // Campos de fechas y cliente
+        JLabel fechaInicioLabel = new JLabel("Fecha de inicio:");
+        fechaInicioLabel.setForeground(textColor);
+        filtersPanel.add(fechaInicioLabel);
+        fechaInicio = new JDateChooser();
+        filtersPanel.add(fechaInicio);
+
+        JLabel fechaFinLabel = new JLabel("Fecha de fin:");
+        fechaFinLabel.setForeground(textColor);
+        filtersPanel.add(fechaFinLabel);
+        fechaFin = new JDateChooser();
+        filtersPanel.add(fechaFin);
+
+        JLabel clienteLabel = new JLabel("Cliente (DNI o Nombre):");
+        clienteLabel.setForeground(textColor);
+        filtersPanel.add(clienteLabel);
+        clienteField = new JTextField();
+        filtersPanel.add(clienteField);
+        
+        JLabel info = new JLabel("Tipo de Reporte: ");
+        info.setForeground(textColor);
+        filtersPanel.add(info);
+        String[] tiposDeReporte = {"Historial de Reservas", "Informe de inventario", "Reservas por Cliente", "Productos preferidos"};
+        tipoReporte = new JComboBox<>(tiposDeReporte);
+        filtersPanel.add(tipoReporte);
+
+        // Espacio para mejorar la alineación
+        filtersPanel.add(new JLabel(""));
+        filtersPanel.add(new JLabel(""));
+
+        reportesPanel.add(filtersPanel, BorderLayout.NORTH);
+        
+        String[] columnNames = {};
+        Object[][] data = {}; // Inicialmente vacía
+        
+        
+        mtableReportes = new DefaultTableModel(data, columnNames);        
+        tableReportes = new JTable(mtableReportes) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Deshabilita la edición de celdas
+            }
+        };
+        
+        
+
+        // Estilizar la tabla
+        tableReportes.setFillsViewportHeight(true);
+        tableReportes.setBackground(backgroundColor);
+        tableReportes.setForeground(textColor);
+        tableReportes.setFont(new Font("Arial", Font.PLAIN, 14));
+        tableReportes.setRowHeight(25);
+        tableReportes.setGridColor(Color.GRAY);
+
+        // Estilo para el encabezado
+        JTableHeader header = tableReportes.getTableHeader();
+        header.setBackground(new Color(100, 149, 237));
+        header.setForeground(Color.WHITE);
+        header.setFont(new Font("Arial", Font.BOLD, 14));
+
+        JScrollPane tableScrollPane = new JScrollPane(tableReportes);
+        tableScrollPane.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Información del Reporte"));
+        reportesPanel.add(tableScrollPane, BorderLayout.CENTER);
+
+        // Panel de botones
+        JPanel buttonsPanel = new JPanel(new GridLayout(1, 3, 10, 0));
+        buttonsPanel.setBackground(backgroundColor);
+
+        JButton btnReporte = new JButton("Generar Reporte");
+        JButton btnExportar = new JButton("Exportar a Excel");
+        
+        
+        
+        btnExportar.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                controladorReporte.exportarAExcel(tableReportes);
+            }        
+        });
+        
+        
+        btnReporte.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                controladorReporte.mostrarReporte();
+            }     
+        });
+
+        buttonsPanel.add(btnReporte);
+        buttonsPanel.add(btnExportar);
+
+        reportesPanel.add(buttonsPanel, BorderLayout.SOUTH);
+
+        // Agregar el panel de reportes a las pestañas
         tabbedPane.addTab("Reportes", reportesPanel);
+
 
         configuracionPanel = new JPanel();
         configuracionPanel.setBackground(backgroundColor);
@@ -453,8 +569,11 @@ public class vistaHome extends JFrame {
 
         
         tabbedPane.addTab("Configuración", configuracionPanel);
-
-        // Crear botones que cambian las pestañas
+        
+        String[] buttonNames = {"Reserva", "Clientes", "Empleados","Carta", "Reportes"};
+        
+        String rolUser = usuarioAutenticado.getRol();
+        
         for (int i = 0; i < buttonNames.length; i++) {
             String name = buttonNames[i];
             JButton button = new JButton(name);
@@ -463,8 +582,43 @@ public class vistaHome extends JFrame {
             button.setAlignmentX(Component.CENTER_ALIGNMENT);
             button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
             
-            final int tabIndex = i; // Guarda el índice de la pestaña correspondiente
-            // Añadir ActionListener para cambiar de pestaña
+            final int tabIndex = i;
+            
+            if (rolUser.equals("Cliente")) {
+                if (name.equals("Reserva")) {
+                    button.setVisible(true);
+                    modificarPlanoButton.setEnabled(false);
+                } else {
+                    button.setVisible(false);
+                }
+            }else if(rolUser.equals("Empleado")){
+                Empleado emp = (Empleado) usuarioAutenticado.getObj();
+                String cargoEmp = emp.getCargo();
+                if (cargoEmp.equals("Administrador")) {
+                    button.setVisible(true);
+                } else if (cargoEmp.equals("Cajero")) {
+                    if (name.equals("Clientes") || name.equals("Empleados")) {
+                        button.setVisible(false);
+                    } else {
+                        button.setVisible(true);
+                    }
+                } else if (cargoEmp.equals("Mesero")) {
+                    if (name.equals("Clientes") || name.equals("Empleados") ) {
+                        button.setVisible(false);
+                    } else {
+                        button.setVisible(true);
+                    }
+                } else if (cargoEmp.equals("Chef Ejecutivo")) {
+                    if (name.equals("Clientes") || name.equals("Empleados") || name.equals("Reportes")) {
+                        button.setVisible(false);
+                    } else {
+                        button.setVisible(true);
+                    }
+                }
+                
+            }
+
+            
             button.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -480,11 +634,19 @@ public class vistaHome extends JFrame {
         bottomPanel.setBorder(new LineBorder(Color.WHITE, 5));
         
         bottomPanel.setBackground(backgroundColor);
-        
-        JLabel userLabel = new JLabel("Usuario Activo: " + usuarioAutenticado.getLogin());
-        userLabel.setForeground(textColor);
-        userLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        bottomPanel.add(userLabel, BorderLayout.WEST);
+        if (usuarioAutenticado.getRol().equals("Empleado")){
+            Empleado emp = (Empleado) usuarioAutenticado.getObj();
+            String rol = emp.getCargo();
+            JLabel userLabel = new JLabel("Usuario Activo: " + usuarioAutenticado.getLogin() +" - " + rol);
+            userLabel.setForeground(textColor);
+            userLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+            bottomPanel.add(userLabel, BorderLayout.WEST);
+        }else if(usuarioAutenticado.getRol().equals("Cliente")){
+            JLabel userLabel = new JLabel("Usuario Activo: " + usuarioAutenticado.getLogin());
+            userLabel.setForeground(textColor);
+            userLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+            bottomPanel.add(userLabel, BorderLayout.WEST);
+        }
         
         dateTimeLabel = new JLabel(getFechaHoraActual());
         dateTimeLabel.setForeground(textColor);
@@ -529,7 +691,7 @@ public class vistaHome extends JFrame {
 
                 // Si la opción es "Sí", es decir, el usuario desea guardar un nuevo plano
                 if (opcion == JOptionPane.YES_OPTION) {
-                    // Mostrar la vista para registrar un nuevo plano
+                    
                     vistaPlano vistaPlano = new vistaPlano(vistaHome.this);
                     vistaPlano.setVisible(true);
                     vistaPlano.setControladorH(controladorH);
@@ -704,6 +866,9 @@ public class vistaHome extends JFrame {
                 }
             }
         });
+        
+        
+
 
         
         // Agregar un DocumentListener para el campo de búsqueda Clientes
@@ -748,8 +913,8 @@ public class vistaHome extends JFrame {
     /**
     * Método para llenar la vista con los paneles de las mesas.
     */
-    public void llenarVistaConMesas(ArrayList<Mesa> mesas) {              
-        // Limpiar el panel de mesas actual
+    public void llenarVistaConMesas(ArrayList<Mesa> mesas) {
+        
         rightTablePanel.removeAll();
 
         // Crear un panel visual para cada mesa
@@ -819,12 +984,35 @@ public class vistaHome extends JFrame {
                         new cRegReserva(vistaR);
                         vistaR.setControladorH(controladorH);
                     } else {
-                        JOptionPane.showMessageDialog(
-                            tablePanel,
-                            "Esta mesa está " + mesa.getEstadoMesa() + " y no se puede modificar.",
-                            "Mesa " + mesa.getEstadoMesa() ,
-                            JOptionPane.WARNING_MESSAGE
-                        );
+                        if (usuarioAutenticado != null) {
+                            if ("Cliente".equalsIgnoreCase(usuarioAutenticado.getRol())) {
+                                // Para el rol Cliente
+                                JOptionPane.showMessageDialog(
+                                    tablePanel,
+                                    "Esta mesa está " + mesa.getEstadoMesa() + " y no se puede modificar.",
+                                    "Mesa " + mesa.getEstadoMesa(),
+                                    JOptionPane.WARNING_MESSAGE
+                                );
+                            } else if ("Empleado".equalsIgnoreCase(usuarioAutenticado.getRol())) {
+                                // Para el rol Empleado
+                                int filaSeleccionada = reservasTable.getSelectedRow();
+                                int columnaSeleccionada = reservasTable.getSelectedColumn();
+
+                                // Solo actuar si se hizo clic en columnas de la 1 a la 7
+                                if (columnaSeleccionada >= 1 && columnaSeleccionada <= 7) {
+                                    Object idReserva = reservasTableModel.getValueAt(filaSeleccionada, 1);
+
+                                    if (idReserva != null && idReserva instanceof Integer) {
+                                        int id = (int) idReserva;
+                                        vistaInfoPedido frameInfo = new vistaInfoPedido(id);
+                                        frameInfo.setVisible(true);
+                                        new cInfo(frameInfo);
+                                    } else {
+                                        mostrarMensaje("ID de reserva no encontrado.");
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             });
@@ -861,6 +1049,64 @@ public class vistaHome extends JFrame {
     public void mostrarMensaje(String mensaje) {
         JOptionPane.showMessageDialog(this, mensaje);
     }
+    
+    public void mostrarReporte(String tipoReporte, ArrayList<?> data) {
+    mtableReportes = (DefaultTableModel) tableReportes.getModel();
+    mtableReportes.setRowCount(0); // Limpiar tabla
+
+    // Modificar el modelo de la tabla según el tipo de reporte
+    switch (tipoReporte) {
+        case "Historial de Reservas":
+            // Cambiar las columnas para el reporte de historial de reservas
+            mtableReportes.setColumnIdentifiers(new Object[]{"ID Reserva", "Fecha", "Cliente", "Total Pedido", "Número de Mesa"});
+            for (Reserva r : (ArrayList<Reserva>) data) {
+                mtableReportes.addRow(new Object[]{
+                    r.getIdReserva(),
+                    r.getFechaReserva(),
+                    r.getCliente().getNombre() + " " + r.getCliente().getApellido(),
+                    r.getPedido().getTotal(),
+                    r.getMesa().getNumeroMesa()
+                });
+            }
+            break;
+
+        case "Informe de inventario":
+            // Cambiar las columnas para el reporte de inventario
+            mtableReportes.setColumnIdentifiers(new Object[]{"ID Producto", "Nombre Producto", "Precio Personal", "Precio Familiar", "Stock"});
+            for (Producto p : (ArrayList<Producto>) data) {
+                mtableReportes.addRow(new Object[]{
+                    p.getIdProducto(),
+                    p.getNombreProducto(),
+                    p.getPrecioPersonal(),
+                    p.getPrecioFamiliar(),
+                    p.getStock()
+                });
+            }
+            break;
+
+        case "Reservas por Cliente":
+            // Cambiar las columnas para el reporte de reservas por cliente
+            mtableReportes.setColumnIdentifiers(new Object[]{"ID Cliente", "Nombre", "Apellido", "Cantidad de Reservas"});
+            for (Cliente c : (ArrayList<Cliente>) data) {
+                mtableReportes.addRow(new Object[]{
+                    c.getIdCliente(),
+                    c.getNombre(),
+                    c.getApellido(),
+                    controladorReporte.getCantidad()  // Asegúrate de que controladorReporte.getCantidad() esté retornando la cantidad correcta
+                });
+            }
+            break;
+
+        
+
+        default:
+            // Caso por defecto (si no coincide con ningún tipo de reporte)
+            System.err.println("Tipo de reporte no válido.");
+            break;
+    }
+}
+
+
 
     /**
      * Método para mostrar una lista de clientes en la tabla.
@@ -899,7 +1145,7 @@ public class vistaHome extends JFrame {
     }
     
     /**
-     * Método para mostrar una lista de empleados en la tabla.
+     * Método para mostrar una lista de productos en la tabla.
      * Limpiar la tabla actual y luego agregar cada producto de la lista a las filas de la tabla.
      * @param productos Lista de productos que se desea mostrar en la tabla.
      */
@@ -917,21 +1163,24 @@ public class vistaHome extends JFrame {
         }
     }
     
+    /**
+     * Método para mostrar una lista Reservas  en la tabla.
+     * Limpiar la tabla actual y luego agregar cada reserva de la lista a las filas de la tabla.
+     * @param reservas Lista de reservas que se desea mostrar en la tabla.
+     */
     public void mostrarReservas(ArrayList<Reserva> reservas) {
-        reservasTableModel.setRowCount(0); // Limpiar tabla
-
+        reservasTableModel.setRowCount(0);
+        reservasTable.requestFocus();
+        ButtonRendererEditor rendererEditor = new ButtonRendererEditor( reservasTable,this);
+        reservasTable.getColumnModel().getColumn(0).setCellRenderer(rendererEditor);
+        reservasTable.getColumnModel().getColumn(0).setCellEditor(rendererEditor);
         for (Reserva r : reservas) {
             if (r.getCliente() != null && r.getCliente().getNombre() != null &&
                 r.getEstadoReserva() != null && r.getMesa() != null && r.getMesa().getEstadoMesa() != null &&
                 r.getPedido() != null && r.getPedido().getEstado() != null) {
-
-                // Crear el botón y configurar el comando
-                JButton btnConfirmar = new JButton("Confirmar");
-                btnConfirmar.setActionCommand(String.valueOf(r.getIdReserva()));       
-
                 // Agregar la fila a la tabla
                 reservasTableModel.addRow(new Object[]{
-                    btnConfirmar,
+                    "",
                     r.getIdReserva(),
                     r.getCliente().getNombre(),
                     r.getEstadoReserva(),
@@ -944,18 +1193,31 @@ public class vistaHome extends JFrame {
         }
     }
     
+    /**
+    * Inicia un temporizador que actualiza la fecha y hora cada segundo.
+    * 
+    * Este método utiliza un objeto {@link Timer} para ejecutar una tarea cada
+    * 1000 milisegundos (1 segundo), actualizando el texto de la etiqueta
+    * {@code dateTimeLabel} con la fecha y hora actual obtenida del método 
+    * {@code getFechaHoraActual()}.
+    * 
+    */
     private void iniciarReloj() {
-    Timer timer = new Timer(1000, new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            dateTimeLabel.setText(getFechaHoraActual());
-        }
-    });
-    timer.start();
-}
+        Timer timer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dateTimeLabel.setText(getFechaHoraActual());
+            }
+        });
+        timer.start();
+    }
 
+    public Usuario getUsuarioAutenticado() {
+        return usuarioAutenticado;
+    }
 
-
+    
+    
     /**
      * Método para establecer el controlador principal del sistema.
      * @param controladorH Objeto de tipo cHome que actúa como controlador principal.
@@ -963,7 +1225,11 @@ public class vistaHome extends JFrame {
     public void setControladorH(cHome controladorH) {
         this.controladorH = controladorH;
     }
-
+    
+    /**
+     * Método para recuperar el controlador principal del sistema.
+     * @return una instancia de {@link cHome}, que representa el controlador principal del sistema.
+     */
     public cHome getControladorH() {
         return controladorH;
     }
@@ -978,11 +1244,37 @@ public class vistaHome extends JFrame {
         this.controladorConf = controladorConf;
     }
     
-    
+    /**
+     * Metodo para recuperar la fecha y hora actual.
+     * 
+     * @return "dd/MM/yyyy HH:mm:ss".
+     */
     private String getFechaHoraActual() {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         return sdf.format(new Date());
     }
 
+    public void setControladorReporte(cReporte controladorReporte) {
+        this.controladorReporte = controladorReporte;
+    }
+
+    public JComboBox<String> getTipoReporte() {
+        return tipoReporte;
+    }
+
+    public Date getFechaInicioUtil() {        
+        return fechaInicioUtil = fechaInicio.getDate();
+    }
+
+    public Date getFechaFinUtil() {
+        return fechaFinUtil = fechaFin.getDate();
+    }
+
+    public JTextField getClienteField() {
+        return clienteField;
+    }
+    
+    
+    
 
 }

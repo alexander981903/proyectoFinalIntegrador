@@ -114,7 +114,7 @@ public class Configuracion {
      * 
      * @return true si tiene permiso para agregar, false en caso contrario.
      */
-    public boolean isPermisosAgregar() {
+    public boolean isPermisosAgregar() {    
         return permisosAgregar;
     }
 

@@ -56,7 +56,7 @@ public class vistaRegEmpleado extends JFrame {
     public vistaRegEmpleado() {
         // Configuración de la ventana
         setTitle("Registro de Empleado");
-        setSize(400, 200);
+        setSize(400, 220);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
@@ -70,23 +70,32 @@ public class vistaRegEmpleado extends JFrame {
      * Configura los campos de texto, combo box, botones y el layout de la ventana.
      */
     private void initComponents() {
-        // Crear un panel para los campos del empleado
+        
         fieldsPanel = new JPanel();
-        fieldsPanel.setLayout(new GridLayout(3, 2, 10, 10)); // 3 filas, 2 columnas
-        fieldsPanel.setBackground(backgroundColor); // Establecer color de fondo
+        fieldsPanel.setLayout(new GridLayout(5, 2, 10, 10));
+        fieldsPanel.setBackground(backgroundColor);
 
-        // Crear etiquetas y campos de texto para empleado
+        // Campos para el empleado
         lblNombreEmp = new JLabel("Nombre:");
-        lblNombreEmp.setForeground(textColor); // Color del texto
+        lblNombreEmp.setForeground(textColor);
         txtNombreEmp = new JTextField(20);
 
         lblCargo = new JLabel("Cargo:");
-        lblCargo.setForeground(textColor); // Color del texto
-        cmbCargo = new JComboBox<>(new String[] {"Administrador", "Mesero", "Cajero", "Chef Ejecutivo"}); // ComboBox de cargos
+        lblCargo.setForeground(textColor);
+        cmbCargo = new JComboBox<>(new String[] {"Administrador", "Mesero", "Cajero", "Chef Ejecutivo"});
 
         lblTurno = new JLabel("Turno:");
-        lblTurno.setForeground(textColor); // Color del texto
+        lblTurno.setForeground(textColor);
         txtTurno = new JTextField(20);
+
+        // Campos para el usuario
+        JLabel lblLogin = new JLabel("Login:");
+        lblLogin.setForeground(textColor);
+        JTextField txtLogin = new JTextField(20);
+
+        JLabel lblClave = new JLabel("Contraseña:");
+        lblClave.setForeground(textColor);
+        JPasswordField txtClave = new JPasswordField(20);
 
         // Agregar componentes al panel de campos
         fieldsPanel.add(lblNombreEmp);
@@ -95,43 +104,46 @@ public class vistaRegEmpleado extends JFrame {
         fieldsPanel.add(cmbCargo);
         fieldsPanel.add(lblTurno);
         fieldsPanel.add(txtTurno);
+        fieldsPanel.add(lblLogin);
+        fieldsPanel.add(txtLogin);
+        fieldsPanel.add(lblClave);
+        fieldsPanel.add(txtClave);
 
-        // Crear un panel para los botones
+        // Panel para los botones
         buttonPanel = new JPanel();
-        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER)); // Alinear los botones en el centro
-        buttonPanel.setBackground(backgroundColor); // Establecer color de fondo
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.setBackground(backgroundColor);
 
-        // Crear botones
+        // Botones
         btnNuevo = new JButton("Registrar");
         btnNuevo.setBackground(buttonColor);
-        btnNuevo.setForeground(textColor); // Color del texto
+        btnNuevo.setForeground(textColor);
 
         btnModificar = new JButton("Modificar");
         btnModificar.setBackground(buttonColor);
-        btnModificar.setForeground(textColor); // Color del texto
+        btnModificar.setForeground(textColor);
         btnModificar.setVisible(false);
 
         btnCancelar = new JButton("Cancelar");
         btnCancelar.setBackground(buttonColor);
-        btnCancelar.setForeground(textColor); // Color del texto
+        btnCancelar.setForeground(textColor);
 
         // Agregar botones al panel
         buttonPanel.add(btnNuevo);
         buttonPanel.add(btnModificar);
         buttonPanel.add(btnCancelar);
 
-        // Crear un panel principal para contener los campos y botones
+        // Panel principal para contener campos y botones
         mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
         mainPanel.add(fieldsPanel, BorderLayout.CENTER);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
-
-        // Agregar panel principal a la ventana
+        
         add(mainPanel);
-
-        // Visualizar la ventana
-        getContentPane().setBackground(backgroundColor); // Establecer color de fondo de la ventana
+        
+        getContentPane().setBackground(backgroundColor);
         setVisible(true);
+
 
         // Añadir ActionListener al botón "Registrar" para guardar el nuevo empleado
         btnNuevo.addActionListener(new ActionListener() {
@@ -140,8 +152,11 @@ public class vistaRegEmpleado extends JFrame {
                 String nombreEmp = txtNombreEmp.getText();
                 String cargoEmp = (String) cmbCargo.getSelectedItem();
                 String turnoEmp = txtTurno.getText();
-
-                controladorE.agregarEmpleado(nombreEmp, cargoEmp, turnoEmp);
+                String login = txtLogin.getText();
+                String passw = new String(txtClave.getPassword());
+                String rol = "Empleado";
+                
+                controladorE.agregarEmpleado(nombreEmp, cargoEmp, turnoEmp, login, passw,rol);
                 controladorH.cargarEmpleados();
                 dispose();
             }

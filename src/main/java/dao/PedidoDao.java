@@ -11,7 +11,6 @@ import Modelo.Producto;
 import Modelo.Reserva;
 import conf.DataSource;
 import java.awt.Desktop;
-import java.awt.List;
 import java.io.File;
 import java.sql.*;
 import java.io.FileOutputStream;
@@ -48,7 +47,7 @@ public class PedidoDao {
         PreparedStatement stmtPedidoProducto = null;
         PreparedStatement stmtUpdateProducto = null;
         PreparedStatement stmtReserva = null;
-        PreparedStatement stmtUpdateMesa = null; // Para actualizar el estado de la mesa
+        PreparedStatement stmtUpdateMesa = null; 
         ResultSet rs = null;
         ResultSet rsStock = null;
 
@@ -113,7 +112,7 @@ public class PedidoDao {
             stmtUpdateReserva.executeUpdate();
 
             // Paso 4: Insertar productos en la tabla "pedido_producto"
-            String sqlPedidoProducto = "INSERT INTO pedido_producto (idPedido, idProducto, cantidad, precio) VALUES (?, ?, ?, ?)";
+            String sqlPedidoProducto = "INSERT INTO pedido_producto (idPedido, idProducto, cantidad, precio, tamaño) VALUES (?, ?, ?, ?,?)";
             stmtPedidoProducto = conexion.prepareStatement(sqlPedidoProducto);
 
             for (Producto producto : productos) {
@@ -136,6 +135,7 @@ public class PedidoDao {
                     stmtPedidoProducto.setInt(2, producto.getIdProducto());
                     stmtPedidoProducto.setInt(3, producto.getCantidad());{
                     stmtPedidoProducto.setDouble(4, producto.getPrecio());
+                    stmtPedidoProducto.setString(5,producto.getTamaño());
 
                 }
                     stmtPedidoProducto.executeUpdate();
@@ -372,9 +372,9 @@ public class PedidoDao {
                 
                 XWPFParagraph pedidoDetails = document.createParagraph();
                 pedidoDetails.setAlignment(ParagraphAlignment.LEFT);
-                pedidoDetails.createRun().setText("\nTotal Pedido: S/ " + rsReserva.getDouble("totalPedido"));
                 pedidoDetails.createRun().setText("\nSubtotal: S/ " + rsReserva.getDouble("subtotalPedido"));
                 pedidoDetails.createRun().setText("\nIGV: S/ " + rsReserva.getDouble("igvPedido"));
+                pedidoDetails.createRun().setText("\nTotal Pedido: S/ " + rsReserva.getDouble("totalPedido"));
 
 
                 // Crear una lista de productos antes de leer los detalles de cada uno

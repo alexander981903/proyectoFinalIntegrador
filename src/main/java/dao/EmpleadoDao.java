@@ -5,12 +5,16 @@
 package dao;
 
 import Modelo.Empleado;
+import Modelo.Usuario;
 import conf.DataSource;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Base64;
 
 /**
  * Clase DAO que maneja las operaciones de base de datos para la entidad Empleado.
@@ -33,20 +37,40 @@ public class EmpleadoDao {
      * @param empleado Objeto Empleado a insertar.
      * @return true si la inserción fue exitosa, false de lo contrario.
      */
-    public boolean insertarEmpleado(Empleado empleado) {
-        String sql = "INSERT INTO empleado (nombreEmpleado, cargo, turno) VALUES (?, ?, ?)";
-        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
-            ps.setString(1, empleado.getNombreEmp());
-            ps.setString(2, empleado.getCargo());
-            ps.setString(3, empleado.getTurno());
+    public boolean insertarEmpleadoConUsuario(Empleado empleado, Usuario usuario) {
+        String sqlEmpleado = "INSERT INTO empleado (nombreEmpleado, cargo, turno) VALUES (?, ?, ?)";
+        String sqlUsuario = "INSERT INTO usuario (login, clave, rol, idEmpleado, idConfiguracion) VALUES (?, ?, ?, ?, ?)";
 
-            ps.executeUpdate();
-            return true;        
+        try (PreparedStatement psEmpleado = conexion.prepareStatement(sqlEmpleado, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            // Inserción del empleado
+            psEmpleado.setString(1, empleado.getNombreEmp());
+            psEmpleado.setString(2, empleado.getCargo());
+            psEmpleado.setString(3, empleado.getTurno());
+            psEmpleado.executeUpdate();
+            
+            
+            try (ResultSet rs = psEmpleado.getGeneratedKeys()) {
+                if (rs.next()) {
+                    int idEmpleado = rs.getInt(1);
+
+                    // Inserción del usuario asociado
+                    try (PreparedStatement psUsuario = conexion.prepareStatement(sqlUsuario)) {
+                        psUsuario.setString(1, usuario.getLogin());
+                        psUsuario.setString(2, hashPassword(usuario.getClave()));
+                        psUsuario.setString(3, usuario.getRol());
+                        psUsuario.setInt(4, idEmpleado);
+                        psUsuario.setNull(5, java.sql.Types.INTEGER);
+                        psUsuario.executeUpdate();
+                    }
+                    return true;
+                }
+            }
         } catch (SQLException e) {
-            System.err.println("Error al insertar Empleado en la capa DAO: " + e.getMessage());
-            return false;
+            System.err.println("Error al insertar empleado y usuario: " + e.getMessage());
         }
+        return false;
     }
+
 
     /**
      * Método para obtener todos los empleados de la base de datos.
@@ -149,5 +173,15 @@ public class EmpleadoDao {
             System.err.println("Error al buscar clientes por nombre: " + e.getMessage());
         }
         return empleados;
+    }
+    
+    private String hashPassword(String password) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hashedBytes = md.digest(password.getBytes());
+            return Base64.getEncoder().encodeToString(hashedBytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error al hashear la contraseña", e);
+        }
     }
 }

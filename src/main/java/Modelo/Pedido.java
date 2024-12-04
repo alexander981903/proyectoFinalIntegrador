@@ -5,6 +5,7 @@
 package Modelo;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 /**
@@ -132,6 +133,10 @@ public class Pedido {
 
     public void setTotal(double total) {
         this.total = total;
+    }
+
+    public void setFecha(LocalDate toLocalDate) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
     
     

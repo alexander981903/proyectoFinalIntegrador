@@ -38,10 +38,8 @@ public class cConfig {
         Configuracion configuracion = dao.obtenerConfiguracion();
         
         if (configuracion != null) {
-            // Si se encuentra la configuración, mostramos los datos en la vista
             //vistaConfig.mostrarConfiguracion(configuracion);
         } else {
-            // Si no se encuentra la configuración, mostramos un mensaje de error
             vistaH.mostrarMensaje("No se encontró configuración actual.");
         }
     }
@@ -72,11 +70,10 @@ public class cConfig {
         configuracion.setPermisosAccederBotones(permisosAccederBotones);
         configuracion.setConfiguracionActiva(configuracionActiva);
         
-        // Intentamos actualizar la configuración en la base de datos
         boolean exito = dao.actualizarConfiguracion(configuracion);
         if (exito) {
             vistaH.mostrarMensaje("Configuración actualizada exitosamente.");
-            vistaH.dispose(); // Cerramos la ventana después de la actualización
+            vistaH.dispose();
         } else {
             vistaH.mostrarMensaje("Error al actualizar la configuración.");
         }
